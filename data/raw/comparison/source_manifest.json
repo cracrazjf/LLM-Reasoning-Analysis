@@ -1,0 +1,75 @@
+{
+  "rivers": {
+    "query_parameters": {
+      "classes": [
+        "Q4022"
+      ],
+      "property": "P2043",
+      "min_sitelinks": 20,
+      "candidate_limit": 2000
+    },
+    "sha256": "387689e8921a9ff660de059b1dbd5e047a0616d6abf0017888953186798b556f"
+  },
+  "cities": {
+    "query_parameters": {
+      "classes": [
+        "Q515",
+        "Q1549591",
+        "Q5119",
+        "Q1637706",
+        "Q174844"
+      ],
+      "property": "P1082",
+      "min_sitelinks": 40,
+      "candidate_limit": 2000
+    },
+    "sha256": "1e845c6d213d43b10d8202e6fad87dbcea048fd4dc01f61bec520882b6c793e7"
+  },
+  "countries": {
+    "query_parameters": {
+      "classes": [
+        "Q6256",
+        "Q3624078"
+      ],
+      "property": "P1082",
+      "min_sitelinks": 30,
+      "candidate_limit": 2000
+    },
+    "sha256": "019eb367b6fea8664e473d6b2750992a930c79d10431863de91eadd296924ce0"
+  },
+  "mountains": {
+    "query_parameters": {
+      "classes": [
+        "Q8502"
+      ],
+      "property": "P2044",
+      "min_sitelinks": 20,
+      "candidate_limit": 2000
+    },
+    "sha256": "496e35e17e3373ce62c41281356d6a61b5ad97c03a63e2b40c89377e81f8a8c3"
+  },
+  "buildings": {
+    "query_parameters": {
+      "classes": [
+        "Q11303",
+        "Q12518"
+      ],
+      "property": "P2048",
+      "min_sitelinks": 10,
+      "candidate_limit": 2000
+    },
+    "sha256": "9128e29b20ba8327dcb2ca4465d5306dfc05150f79054954fda5a52bcbd239fe"
+  },
+  "stadiums": {
+    "query_parameters": {
+      "classes": [
+        "Q483110",
+        "Q1154710"
+      ],
+      "property": "P1083",
+      "min_sitelinks": 15,
+      "candidate_limit": 2000
+    },
+    "sha256": "cf714642be31e1266d9338c5dc59c8600c8e07b6269740db3468b7babeffcfbc"
+  }
+}

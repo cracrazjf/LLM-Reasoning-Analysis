@@ -1,0 +1,395 @@
+{
+  "lra_version": "0.1.0",
+  "built_at": "2026-09-14T22:07:23+00:00",
+  "data_config_hash": "e6cc16cb0716",
+  "prompts_config_hash": "dbc7f2b86fca",
+  "conditions": [
+    "C0_baseline",
+    "C1_caution",
+    "C2_speed"
+  ],
+  "sources": {
+    "prontoqa": {
+      "source_release": "original_v1",
+      "archive": "data/raw/prontoqa/model_outputs_v1.zip",
+      "archive_sha256": "a008e2ae8cade925e01adfe1d3a9b6ed59e2ca887689f37ea25e0fd8e85601dd",
+      "members": {
+        "1": {
+          "name": "gpt_textdavinci002_1hop.log",
+          "sha256": "e0e854d4d17baaa7f61018e366182a238ed59215165b19bdeb58ff802e4e1714"
+        },
+        "3": {
+          "name": "gpt_textdavinci002_3hop.log",
+          "sha256": "329c0c84285081d614f3c47a99fa4b11237b17321cb8a275fc1c062784c5eafb"
+        },
+        "5": {
+          "name": "gpt_textdavinci002_5hop.log",
+          "sha256": "4990ec7a89144003d74ec120fec97d0bca0645a0751945965f87109c12b60246"
+        }
+      },
+      "hops": [
+        1,
+        3,
+        5
+      ],
+      "source_archive_url": "https://github.com/asaparov/prontoqa/blob/0a6412b6fddf46324a1cb96e066dd7b3d89b87d6/model_outputs_v1.zip"
+    },
+    "comparison": {
+      "data_version": "v2",
+      "method": "custom_reconstruction_after_Lehmann_et_al",
+      "popularity": "Wikipedia_sitelinks"
+    }
+  },
+  "task_builds": {
+    "strategyqa": {
+      "dependencies": {
+        "task_config": {
+          "url": "https://storage.googleapis.com/ai2i/strategyqa/data/strategyqa_dataset.zip"
+        },
+        "seed": 20260914,
+        "prompt_config": {
+          "system_template": "You are answering a two-alternative question. Think it through first, then give your final answer.\n\nAfter thinking, your final response must follow exactly this format, on two lines and nothing else:\nAnswer: {answer_spec}\nConfidence: <an integer from 50 to 100>%\n{condition_instruction}\n",
+          "answer_specs": {
+            "strategyqa": "Yes or No",
+            "prontoqa": "True or False",
+            "comparison": "A or B"
+          },
+          "user_template": "{question}",
+          "conditions": {
+            "C0_baseline": "",
+            "C1_caution": "This question is difficult and mistakes are costly. Verify your reasoning carefully, explicitly consider the opposite answer, and answer only when you are sure.",
+            "C2_speed": "Answer as quickly as possible with minimal deliberation. Speed matters more than perfection."
+          }
+        },
+        "files": {
+          "data/raw/strategyqa/extracted/strategyqa_train.json": "728e28b7d6bdfe6da3a0a5f8c5923113a79063d199e960cfcc9f8a3ab34cd92c",
+          "src/lra/data/strategyqa.py": "d4d13de73dd6949a00bff51bf008d4a9ecc7838f4b7d2e539cd9aaa74785a090",
+          "src/lra/data/build.py": "29b1b5adfba08fae96e65f275188ba6a1585951468f369404d9896465f0e9905",
+          "src/lra/data/schema.py": "a347a8932f6db317e13a7667f219bfc1425984ad06e9fb987a86343d9db76c98",
+          "src/lra/data/prompts.py": "891732af412862783ae85a1a9faf9c6cb4731156bfa1bd8682d77fceba7b7d83"
+        }
+      },
+      "items_sha256": "4c6e527f04ebbe67f9ec42725ca838bfbf2a3cdc51e4cec55d8974707648142f",
+      "prompts_sha256": "132c3779935bced5b96124c35abd076e695179138f2927c8ca8e51d6914d86e8"
+    },
+    "prontoqa": {
+      "dependencies": {
+        "task_config": {
+          "source": "official_v1_archive",
+          "archive": "data/raw/prontoqa/model_outputs_v1.zip",
+          "archive_sha256": "a008e2ae8cade925e01adfe1d3a9b6ed59e2ca887689f37ea25e0fd8e85601dd",
+          "hops": [
+            1,
+            3,
+            5
+          ],
+          "expected_trials_per_hop": 400,
+          "members": {
+            "1": {
+              "name": "gpt_textdavinci002_1hop.log",
+              "sha256": "e0e854d4d17baaa7f61018e366182a238ed59215165b19bdeb58ff802e4e1714"
+            },
+            "3": {
+              "name": "gpt_textdavinci002_3hop.log",
+              "sha256": "329c0c84285081d614f3c47a99fa4b11237b17321cb8a275fc1c062784c5eafb"
+            },
+            "5": {
+              "name": "gpt_textdavinci002_5hop.log",
+              "sha256": "4990ec7a89144003d74ec120fec97d0bca0645a0751945965f87109c12b60246"
+            }
+          }
+        },
+        "seed": 20260914,
+        "prompt_config": {
+          "system_template": "You are answering a two-alternative question. Think it through first, then give your final answer.\n\nAfter thinking, your final response must follow exactly this format, on two lines and nothing else:\nAnswer: {answer_spec}\nConfidence: <an integer from 50 to 100>%\n{condition_instruction}\n",
+          "answer_specs": {
+            "strategyqa": "Yes or No",
+            "prontoqa": "True or False",
+            "comparison": "A or B"
+          },
+          "user_template": "{question}",
+          "conditions": {
+            "C0_baseline": "",
+            "C1_caution": "This question is difficult and mistakes are costly. Verify your reasoning carefully, explicitly consider the opposite answer, and answer only when you are sure.",
+            "C2_speed": "Answer as quickly as possible with minimal deliberation. Speed matters more than perfection."
+          }
+        },
+        "files": {
+          "data/raw/prontoqa/model_outputs_v1.zip": "a008e2ae8cade925e01adfe1d3a9b6ed59e2ca887689f37ea25e0fd8e85601dd",
+          "src/lra/data/prontoqa.py": "4c00f754c8424b2e1a0dc5a9ff92e44b10aa9ebb8624f332a8c13099402bc864",
+          "src/lra/data/build.py": "29b1b5adfba08fae96e65f275188ba6a1585951468f369404d9896465f0e9905",
+          "src/lra/data/schema.py": "a347a8932f6db317e13a7667f219bfc1425984ad06e9fb987a86343d9db76c98",
+          "src/lra/data/prompts.py": "891732af412862783ae85a1a9faf9c6cb4731156bfa1bd8682d77fceba7b7d83"
+        }
+      },
+      "items_sha256": "0ce0265fdb607a4db6fe98a5db9da72670f7fe030773f63cecc6ed133ba14ef1",
+      "prompts_sha256": "883ef2fa55e9872daca7b171a8004a93f4be72c130d652458b6bc2861a03fd30"
+    },
+    "comparison": {
+      "dependencies": {
+        "task_config": {
+          "user_agent": "LLM-Reasoning-Analysis/0.1 (research; contact via GitHub)",
+          "max_entities_per_attribute": 1000,
+          "ratio_bins": [
+            [
+              0.02,
+              0.05
+            ],
+            [
+              0.05,
+              0.1
+            ],
+            [
+              0.1,
+              0.2
+            ],
+            [
+              0.2,
+              0.4
+            ],
+            [
+              0.4,
+              1.0
+            ]
+          ],
+          "pairs_per_bin": 100,
+          "max_uses_per_entity": 3,
+          "attributes": {
+            "rivers": {
+              "classes": [
+                "Q4022"
+              ],
+              "property": "P2043",
+              "unit": "km",
+              "min_sitelinks": 20,
+              "display_with": "country",
+              "plausible_range": [
+                5,
+                7500
+              ],
+              "larger": "Which river is longer?",
+              "smaller": "Which river is shorter?"
+            },
+            "cities": {
+              "population_policy": {
+                "as_of": "2026-09-14",
+                "min_year": 2015,
+                "max_pair_year_gap": 3,
+                "stability_years": 3,
+                "allowed_qualifiers": [
+                  "P585",
+                  "P459",
+                  "P1480",
+                  "P805"
+                ]
+              },
+              "classes": [
+                "Q515",
+                "Q1549591",
+                "Q5119",
+                "Q1637706",
+                "Q174844"
+              ],
+              "property": "P1082",
+              "unit": null,
+              "min_sitelinks": 40,
+              "display_with": "country",
+              "plausible_range": [
+                20000,
+                40000000
+              ],
+              "larger": "Using the population figures for the years indicated, which city has the larger population?",
+              "smaller": "Using the population figures for the years indicated, which city has the smaller population?"
+            },
+            "countries": {
+              "population_policy": {
+                "as_of": "2026-09-14",
+                "min_year": 2015,
+                "max_pair_year_gap": 3,
+                "stability_years": 3,
+                "allowed_qualifiers": [
+                  "P585",
+                  "P459",
+                  "P1480",
+                  "P805"
+                ]
+              },
+              "classes": [
+                "Q6256",
+                "Q3624078"
+              ],
+              "property": "P1082",
+              "unit": null,
+              "min_sitelinks": 30,
+              "max_uses_per_entity": 8,
+              "display_with": null,
+              "plausible_range": [
+                500,
+                2000000000
+              ],
+              "larger": "Using the population figures for the years indicated, which country has the larger population?",
+              "smaller": "Using the population figures for the years indicated, which country has the smaller population?"
+            },
+            "mountains": {
+              "classes": [
+                "Q8502"
+              ],
+              "property": "P2044",
+              "unit": "m",
+              "min_sitelinks": 20,
+              "display_with": "country",
+              "plausible_range": [
+                100,
+                9000
+              ],
+              "larger": "Which mountain has the higher summit elevation?",
+              "smaller": "Which mountain has the lower summit elevation?"
+            },
+            "buildings": {
+              "classes": [
+                "Q11303",
+                "Q12518"
+              ],
+              "property": "P2048",
+              "unit": "m",
+              "min_sitelinks": 10,
+              "display_with": "admin",
+              "plausible_range": [
+                30,
+                1000
+              ],
+              "larger": "Which building is taller?",
+              "smaller": "Which building is shorter?"
+            },
+            "stadiums": {
+              "classes": [
+                "Q483110",
+                "Q1154710"
+              ],
+              "property": "P1083",
+              "unit": null,
+              "min_sitelinks": 15,
+              "display_with": "admin",
+              "plausible_range": [
+                2000,
+                200000
+              ],
+              "larger": "Which stadium has the larger seating capacity?",
+              "smaller": "Which stadium has the smaller seating capacity?"
+            }
+          }
+        },
+        "seed": 20260914,
+        "prompt_config": {
+          "system_template": "You are answering a two-alternative question. Think it through first, then give your final answer.\n\nAfter thinking, your final response must follow exactly this format, on two lines and nothing else:\nAnswer: {answer_spec}\nConfidence: <an integer from 50 to 100>%\n{condition_instruction}\n",
+          "answer_specs": {
+            "strategyqa": "Yes or No",
+            "prontoqa": "True or False",
+            "comparison": "A or B"
+          },
+          "user_template": "{question}",
+          "conditions": {
+            "C0_baseline": "",
+            "C1_caution": "This question is difficult and mistakes are costly. Verify your reasoning carefully, explicitly consider the opposite answer, and answer only when you are sure.",
+            "C2_speed": "Answer as quickly as possible with minimal deliberation. Speed matters more than perfection."
+          }
+        },
+        "files": {
+          "data/raw/comparison/buildings.entities.json": "9128e29b20ba8327dcb2ca4465d5306dfc05150f79054954fda5a52bcbd239fe",
+          "data/raw/comparison/cities.entities.json": "1e845c6d213d43b10d8202e6fad87dbcea048fd4dc01f61bec520882b6c793e7",
+          "data/raw/comparison/countries.entities.json": "019eb367b6fea8664e473d6b2750992a930c79d10431863de91eadd296924ce0",
+          "data/raw/comparison/mountains.entities.json": "496e35e17e3373ce62c41281356d6a61b5ad97c03a63e2b40c89377e81f8a8c3",
+          "data/raw/comparison/population_metadata.json": "9694217d966df697ce50989230fa0c246c96b8619ba1ba91c8edcde337b77dfe",
+          "data/raw/comparison/rivers.entities.json": "387689e8921a9ff660de059b1dbd5e047a0616d6abf0017888953186798b556f",
+          "data/raw/comparison/source_manifest.json": "19ae8e0e0074214dee8d6d844948d342112dc519774d49f050ea2f21785f3649",
+          "data/raw/comparison/stadiums.entities.json": "cf714642be31e1266d9338c5dc59c8600c8e07b6269740db3468b7babeffcfbc",
+          "src/lra/data/comparison.py": "3f31b5c489e7d21004274f704910df3c9a8666a16e360d5a191e874827f24b00",
+          "src/lra/data/build.py": "29b1b5adfba08fae96e65f275188ba6a1585951468f369404d9896465f0e9905",
+          "src/lra/data/schema.py": "a347a8932f6db317e13a7667f219bfc1425984ad06e9fb987a86343d9db76c98",
+          "src/lra/data/prompts.py": "891732af412862783ae85a1a9faf9c6cb4731156bfa1bd8682d77fceba7b7d83",
+          "src/lra/data/comparison_metadata.py": "74dca80786112b19f0504469ebbdb0fa650d0efaedb706030c8fcafe9166ee89"
+        }
+      },
+      "items_sha256": "dbdf6083b881be8ea18912ae8e75fd6250172b718e980b35ce6b9ee7e96def1a",
+      "prompts_sha256": "bb3e092a7ae95e2a59357bf879ab2f41d7aa0c03f9c7076e25fa7edc0915fefc"
+    }
+  },
+  "split_build": {
+    "config": {
+      "main": {
+        "strategyqa": 300,
+        "prontoqa": 300,
+        "comparison": 300
+      },
+      "pilot": {
+        "strategyqa": 30,
+        "prontoqa": 30,
+        "comparison": 30
+      }
+    },
+    "seed": 20260914,
+    "scipy_version": "1.15.3",
+    "builder_sha256": "80f7fd9341b8f9d419af5d40c141a24f8f5f8bf025f190e972a7dec344f1ba06"
+  },
+  "artifacts": {
+    "prompts/comparison.jsonl": "bb3e092a7ae95e2a59357bf879ab2f41d7aa0c03f9c7076e25fa7edc0915fefc",
+    "prompts/prontoqa.jsonl": "883ef2fa55e9872daca7b171a8004a93f4be72c130d652458b6bc2861a03fd30",
+    "prompts/strategyqa.jsonl": "132c3779935bced5b96124c35abd076e695179138f2927c8ca8e51d6914d86e8",
+    "splits/main.json": "be21c8b560e35b8b9ae1e946a6010a7f835bacab7d00d65b011efd209800abfb",
+    "splits/pilot.json": "fd75deef104f15df751f14650607d8b73bd15318fe692822f1705d6707a53e61",
+    "tasks/comparison.jsonl": "dbdf6083b881be8ea18912ae8e75fd6250172b718e980b35ce6b9ee7e96def1a",
+    "tasks/prontoqa.jsonl": "0ce0265fdb607a4db6fe98a5db9da72670f7fe030773f63cecc6ed133ba14ef1",
+    "tasks/strategyqa.jsonl": "4c6e527f04ebbe67f9ec42725ca838bfbf2a3cdc51e4cec55d8974707648142f"
+  },
+  "tasks": {
+    "strategyqa": {
+      "n_items": 2290,
+      "labels": {
+        "Yes": 1071,
+        "No": 1219
+      },
+      "by_decomposition_steps": {
+        "1": 18,
+        "2": 626,
+        "3": 1219,
+        "4": 342,
+        "5": 85
+      }
+    },
+    "prontoqa": {
+      "n_items": 1200,
+      "labels": {
+        "False": 580,
+        "True": 620
+      },
+      "by_hops": {
+        "1": 400,
+        "3": 400,
+        "5": 400
+      }
+    },
+    "comparison": {
+      "n_items": 6000,
+      "labels": {
+        "B": 3000,
+        "A": 3000
+      },
+      "by_attribute": {
+        "buildings": 1000,
+        "cities": 1000,
+        "countries": 1000,
+        "mountains": 1000,
+        "rivers": 1000,
+        "stadiums": 1000
+      },
+      "by_ratio_bin": {
+        "0": 1200,
+        "1": 1200,
+        "2": 1200,
+        "3": 1200,
+        "4": 1200
+      },
+      "n_pairs": 3000
+    }
+  }
+}

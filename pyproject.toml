@@ -1,0 +1,23 @@
+[project]
+name = "lra"
+version = "0.1.0"
+description = "Prepare and validate binary reasoning datasets and prompts"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=1.26",
+  "requests>=2.31",
+  "pyyaml>=6",
+  "scipy>=1.10",
+]
+
+[project.scripts]
+lra-build-data = "lra.data.build:main"
+lra-validate-data = "lra.data.validate:main"
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

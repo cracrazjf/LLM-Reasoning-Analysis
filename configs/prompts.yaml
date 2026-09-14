@@ -1,0 +1,25 @@
+# Prompt templates. The question text is identical across conditions; only the
+# condition instruction (last paragraph of the system prompt) changes.
+
+system_template: |
+  You are answering a two-alternative question. Think it through first, then give your final answer.
+
+  After thinking, your final response must follow exactly this format, on two lines and nothing else:
+  Answer: {answer_spec}
+  Confidence: <an integer from 50 to 100>%
+  {condition_instruction}
+
+answer_specs:
+  strategyqa: "Yes or No"
+  prontoqa: "True or False"
+  comparison: "A or B"
+
+user_template: "{question}"
+
+conditions:
+  C0_baseline: ""
+  C1_caution: >-
+    This question is difficult and mistakes are costly. Verify your reasoning carefully,
+    explicitly consider the opposite answer, and answer only when you are sure.
+  C2_speed: >-
+    Answer as quickly as possible with minimal deliberation. Speed matters more than perfection.
