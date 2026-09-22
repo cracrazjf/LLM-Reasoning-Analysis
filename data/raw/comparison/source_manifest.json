@@ -10,21 +10,6 @@
     },
     "sha256": "387689e8921a9ff660de059b1dbd5e047a0616d6abf0017888953186798b556f"
   },
-  "cities": {
-    "query_parameters": {
-      "classes": [
-        "Q515",
-        "Q1549591",
-        "Q5119",
-        "Q1637706",
-        "Q174844"
-      ],
-      "property": "P1082",
-      "min_sitelinks": 40,
-      "candidate_limit": 2000
-    },
-    "sha256": "1e845c6d213d43b10d8202e6fad87dbcea048fd4dc01f61bec520882b6c793e7"
-  },
   "countries": {
     "query_parameters": {
       "classes": [
