@@ -281,11 +281,57 @@ def histograms(stop: pd.DataFrame, table: pd.DataFrame, out: Path, cond: str, pe
     return len(chunks)
 
 
+PAPER_RC = {"font.family": "sans-serif", "font.size": 7.5, "axes.labelsize": 7.5, "axes.titlesize": 7.5, "xtick.labelsize": 6.5,
+            "ytick.labelsize": 6.5, "legend.fontsize": 7, "axes.linewidth": 0.6, "xtick.major.width": 0.5, "ytick.major.width": 0.5,
+            "xtick.major.size": 2.5, "ytick.major.size": 2.5, "pdf.fonttype": 42, "ps.fonttype": 42, "savefig.dpi": 300}
+
+
+def paper_histograms(stop: pd.DataFrame, table: pd.DataFrame, out: Path, cond: str, per_page: int = 20) -> int:
+    """The stop-value histograms per prompt in a plain figure style: PDF (vector) and PNG per page."""
+    out.mkdir(parents=True, exist_ok=True)
+    items = sorted(stop.item_id.unique())
+    chunks = [items[i:i + per_page] for i in range(0, len(items), per_page)]
+    info = table.set_index("item_id")
+    lo, hi = min(-4.0, float(np.floor(stop.X.quantile(0.002)))), float(np.ceil(stop.rel_chosen.quantile(0.999)))
+    edges = np.arange(lo - 0.125, hi + 0.5, 0.5)
+    with plt.rc_context(PAPER_RC):
+        for pi, chunk in enumerate(chunks, 1):
+            fig, axes = plt.subplots(5, 4, figsize=(7.2, 9.0), sharex=True, sharey=True)
+            for ax, item in zip(axes.ravel(), chunk):
+                g = stop[stop.item_id == item]
+                e = info.loc[item]
+                ax.hist(g.rel_unchosen.clip(lo, hi), bins=edges, color=COL["unchosen"], alpha=0.75, linewidth=0)
+                ax.hist(g.rel_chosen.clip(lo, hi), bins=edges, color=COL["chosen"], alpha=0.75, linewidth=0)
+                ax.hist(g.X.clip(lo, hi), bins=edges, histtype="step", color=INK, linewidth=0.8)
+                pair, order = item.split(":", 1)[1].rsplit(":", 1)
+                ax.set_title(f"{pair} ({order})   acc. {e.accuracy:.2f}\nSD {e.chosen_sd:.1f} / {e.unchosen_sd:.1f} / {e.ln_ratio_sd:.1f}", loc="left", pad=2, fontsize=6.5)
+                for side in ("top", "right"):
+                    ax.spines[side].set_visible(False)
+                ax.tick_params(direction="out")
+            for ax in axes.ravel()[len(chunk):]:
+                ax.axis("off")
+            for ax in axes[:, 0]:
+                ax.set_ylabel("traces")
+            for ax in axes[-1, :]:
+                ax.set_xlabel("value at the stop (nats)")
+            handles = [plt.Rectangle((0, 0), 1, 1, color=COL["chosen"], alpha=0.75, label="chosen option, raw logit"),
+                       plt.Rectangle((0, 0), 1, 1, color=COL["unchosen"], alpha=0.75, label="unchosen option, raw logit"),
+                       plt.Line2D([], [], color=INK, lw=0.8, label=r"$\ln\,[p(\mathrm{chosen})/p(\mathrm{unchosen})]$")]
+            fig.legend(handles=handles, loc="upper center", ncol=3, frameon=False, bbox_to_anchor=(0.5, 0.995))
+            fig.text(0.99, 0.004, f"{cond} condition, page {pi} of {len(chunks)}; SD given as chosen / unchosen / log ratio", fontsize=6, color=MUTED, ha="right", va="bottom")
+            fig.tight_layout(rect=(0, 0.012, 1, 0.975))
+            for ext in ("pdf", "png"):
+                fig.savefig(out / f"stop_hist_{cond}_{REF}_p{pi}.{ext}")
+            plt.close(fig)
+    return len(chunks)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--run", type=Path, required=True)
     ap.add_argument("--cond", default="baseline")
     ap.add_argument("--ref", default="raw", choices=list(REFS), help="what to subtract from the letter logits")
+    ap.add_argument("--paper-dir", type=Path, help="also write the histogram pages in a plain figure style (PDF and PNG) here")
     args = ap.parse_args()
     global REF
     REF = args.ref
@@ -329,6 +375,9 @@ def main() -> None:
     figure(stop, out, args.cond)
     n_pages = pages(stop, table, out, args.cond)
     histograms(stop, table, out, args.cond)
+    if args.paper_dir:
+        n_paper = paper_histograms(stop, table, args.paper_dir, args.cond)
+        print(f"paper-style histograms: {n_paper} pages -> {args.paper_dir}/stop_hist_{args.cond}_{REF}_p1..{n_paper}.pdf/.png")
 
     print(f"{res['traces']} {args.cond} traces with raw logits, {res['prompts']} prompts")
     pc = res["p_chosen_at_stop"]
