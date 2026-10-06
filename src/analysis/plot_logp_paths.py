@@ -1,6 +1,6 @@
 """Trajectories of the chosen and of the unchosen option: log-probability or raw logit.
 
-    python src/plot_logp_paths.py --run runs/medxpertqa/main-qwen3-8b [--value logp] [--cond baseline] [--traces 12]
+    python src/analysis/plot_logp_paths.py --run runs/medxpertqa/main-qwen3-8b [--value logp] [--cond baseline] [--traces 12]
 
 Uses <run>/analysis/paths.npz (src/paths.py). After every sentence of the thinking the readout
 gives the two letters' scores for the forced answer. Per trace, the chosen option is the letter the
@@ -38,7 +38,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 from paths import load_paths  # noqa: E402
 
 COL = {"chosen": "#2a78d6", "unchosen": "#eb6834", "other": "#8a8985"}

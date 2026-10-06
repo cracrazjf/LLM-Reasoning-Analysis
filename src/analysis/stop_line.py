@@ -1,6 +1,6 @@
 """Does the chosen option stop on one line? Levels of the chosen and the unchosen option at the stop.
 
-    python src/stop_line.py --run runs/medxpertqa/main-qwen3-8b [--cond baseline]
+    python src/analysis/stop_line.py --run runs/medxpertqa/main-qwen3-8b [--cond baseline]
 
 Uses <run>/analysis/paths.npz with raw logits (readout.py --logits, then paths.py). Per trace the
 chosen option is the letter answered after </think>. Three scales for each option:
@@ -45,9 +45,41 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).parent))
-from path_analysis import Paths, fe_logit  # noqa: E402
-from plot_logp_paths import COL, GRID, INK, MUTED, style  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from paths import Paths  # noqa: E402
+from analysis.plot_logp_paths import COL, GRID, INK, MUTED, style  # noqa: E402
+
+
+def fe_logit(y: np.ndarray, Z: np.ndarray, strata: np.ndarray, iters: int = 60) -> tuple[np.ndarray, np.ndarray, float]:
+    """Logistic regression with one intercept per stratum (Newton steps on the arrowhead Hessian).
+
+    Strata without both outcomes carry no information and are dropped. Returns coefficients,
+    standard errors and the log-likelihood.
+    """
+    s = np.unique(strata, return_inverse=True)[1]
+    ny, nn = np.bincount(s, weights=y), np.bincount(s)
+    keep = ((ny > 0) & (ny < nn))[s]
+    y, Z, s = y[keep].astype(float), Z[keep], np.unique(s[keep], return_inverse=True)[1]
+    S, p = s.max() + 1, Z.shape[1]
+    ny, nn = np.bincount(s, weights=y), np.bincount(s)
+    if p == 0:
+        return np.zeros(0), np.zeros(0), float(np.sum(ny * np.log(ny / nn) + (nn - ny) * np.log(1 - ny / nn)))
+    beta, alpha = np.zeros(p), np.log((ny + 0.5) / (nn - ny + 0.5))
+    for _ in range(iters):
+        mu = 1 / (1 + np.exp(-(alpha[s] + Z @ beta)))
+        w, r = mu * (1 - mu), y - mu
+        Haa = np.bincount(s, weights=w, minlength=S) + 1e-12
+        Hba = np.stack([np.bincount(s, weights=w * Z[:, j], minlength=S) for j in range(p)])
+        schur = (Z * w[:, None]).T @ Z - (Hba / Haa) @ Hba.T
+        ga = np.bincount(s, weights=r, minlength=S)
+        db = np.linalg.solve(schur, Z.T @ r - (Hba / Haa) @ ga)
+        da = (ga - Hba.T @ db) / Haa
+        step = min(1.0, 5 / max(np.max(np.abs(db)), 1e-12))
+        beta, alpha = beta + step * db, alpha + step * da
+        if np.max(np.abs(db)) < 1e-8 and np.max(np.abs(da)) < 1e-6:
+            break
+    eta = alpha[s] + Z @ beta
+    return beta, np.sqrt(np.diag(np.linalg.inv(schur))), float(np.sum(y * eta - np.logaddexp(0, eta)))
 
 
 def levels(P: Paths, A: dict[str, np.ndarray], rows: np.ndarray, at: np.ndarray, letter_a: np.ndarray) -> pd.DataFrame:

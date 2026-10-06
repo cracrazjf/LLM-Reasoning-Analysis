@@ -1,7 +1,7 @@
 """Sample Qwen3-8B reasoning on every prompt of a selection file and store the traces.
 
-    python src/generate.py --selection data/selections/medxpertqa_screen.json \
-        --out runs/medxpertqa/screen-qwen3-8b --samples 8
+    python src/generate.py --selection data/selections/medxpertqa_hurts.json \
+        --out runs/medxpertqa/hurts-qwen3-8b --samples 100
 
 The selection (src/medxpertqa_dataset.py select) lists prompts with their chat
 messages, options and label plus the task fields (pair_id, order, source_id, ...);
