@@ -6,7 +6,9 @@ Uses <run>/analysis/paths.npz with raw logits (readout.py --logits, then paths.p
 chosen option is the letter answered after </think>. Three scales for each option:
   p        probability of the option as the forced answer (chosen + unchosen = 1, almost exactly)
   logit    raw logit (no fixed zero)
-  rel      logit minus the mean logit over the whole vocabulary (the level pinned at every position)
+  rel      the logit minus a reference (--ref): raw (none; the default), mean (the mean logit over
+           the whole vocabulary) or other (the level of the other stored candidates, runs read out
+           before 2026-10-06 only)
 read at the stop (after the last sentence) and before the final verdict sentence.
 
 1. spread   SD of each level over traces, split into between prompts (pair x order) and within
@@ -82,21 +84,30 @@ def fe_logit(y: np.ndarray, Z: np.ndarray, strata: np.ndarray, iters: int = 60) 
     return beta, np.sqrt(np.diag(np.linalg.inv(schur))), float(np.sum(y * eta - np.logaddexp(0, eta)))
 
 
+REFS = {"raw": (None, "raw logit"), "mean": ("mean", "logit minus the vocabulary mean"), "other": ("lse_other", "logit minus the other candidates")}
+REF = "raw"
+
+
+def reference(A: dict[str, np.ndarray], at: np.ndarray) -> np.ndarray:
+    key = REFS[REF][0]
+    return A[key][at].astype(float) if key else np.zeros(len(at))
+
+
 def levels(P: Paths, A: dict[str, np.ndarray], rows: np.ndarray, at: np.ndarray, letter_a: np.ndarray) -> pd.DataFrame:
     """Chosen / unchosen levels of traces `rows` at flat sentence indices `at`; letter_a: the chosen letter is A."""
-    za, zb, oth = A["z_A"][at].astype(float), A["z_B"][at].astype(float), A["mean"][at].astype(float)
+    za, zb, oth = A["z_A"][at].astype(float), A["z_B"][at].astype(float), reference(A, at)
     la, lb = A["logp_A"][at].astype(float), A["logp_B"][at].astype(float)
     c, u = np.where(letter_a, za, zb), np.where(letter_a, zb, za)
     return pd.DataFrame({
         "item_id": P.T.item_id.values[rows], "source_id": P.T.source_id.values[rows], "tokens": P.T.think_tokens.values[rows].astype(float),
         "correct": P.T.correct.values[rows].astype(float),
         "p_chosen": np.exp(np.where(letter_a, la, lb)), "p_unchosen": np.exp(np.where(letter_a, lb, la)),
-        "logit_chosen": c, "logit_unchosen": u, "rel_chosen": c - oth, "rel_unchosen": u - oth, "vocab_mean": oth, "X": c - u})
+        "logit_chosen": c, "logit_unchosen": u, "rel_chosen": c - oth, "rel_unchosen": u - oth, "reference": oth, "X": c - u})
 
 
 def spread(d: pd.DataFrame) -> dict:
     out = {}
-    for col in ("p_chosen", "logit_chosen", "logit_unchosen", "rel_chosen", "rel_unchosen", "vocab_mean", "X"):
+    for col in ("p_chosen", "logit_chosen", "logit_unchosen", "rel_chosen", "rel_unchosen", "reference", "X"):
         g = d.groupby("item_id")[col]
         out[col] = {"median": float(d[col].median()), "p05": float(d[col].quantile(0.05)), "p95": float(d[col].quantile(0.95)),
                     "sd": float(d[col].std()), "sd_between_prompts": float(g.mean().std()),
@@ -130,7 +141,8 @@ def rule(P: Paths, A: dict[str, np.ndarray], keep: np.ndarray) -> dict:
     rows = np.where(P.isv & keep[tr] & P.ends_on_verdict[tr] & np.isfinite(A["z_A"]) & np.isfinite(A["z_B"]))[0]
     y = (k[rows] == P.lv[tr[rows]]).astype(float)
     is_a = P.V[rows] == 1
-    za, zb, oth = A["z_A"][rows].astype(float), A["z_B"][rows].astype(float), A["mean"][rows].astype(float)
+    za, zb = A["z_A"][rows].astype(float), A["z_B"][rows].astype(float)
+    oth = A["mean"][rows].astype(float) if np.isfinite(A["mean"][rows]).any() else A["lse_other"][rows].astype(float)
     own, other_letter = np.where(is_a, za, zb), np.where(is_a, zb, za)
     item = pd.factorize(P.T.item_id)[0][tr[rows]]
     out = {"verdicts": int(len(y)), "stops": int(y.sum())}
@@ -153,7 +165,7 @@ def figure(stop: pd.DataFrame, out: Path, cond: str) -> None:
         ax.plot(x + off, g[(col, 0.5)], "o" if name == "chosen" else "s", ms=3.5, color=COL[name], mec="white", mew=0.4, label=f"{name} option")
     ax.axhline(stop.rel_chosen.median(), color=COL["chosen"], lw=0.8, ls=":")
     ax.set_xlabel(f"{len(g)} prompts (pair x order), ordered by the unchosen level")
-    ax.set_ylabel("logit minus the vocabulary mean, at the stop")
+    ax.set_ylabel(f"{REFS[REF][1]}, at the stop")
     ax.set_title("a  Stop levels per prompt: median and middle half of its traces", loc="left", fontsize=10, color=INK)
     ax.legend(fontsize=8, frameon=False, loc="lower right")
     ax = axes[1]
@@ -173,7 +185,7 @@ def figure(stop: pd.DataFrame, out: Path, cond: str) -> None:
         style(ax)
     fig.suptitle(f"{cond}: where the chosen and the unchosen option are when the thinking ends", x=0.01, ha="left", fontsize=11, color=INK)
     fig.tight_layout(rect=(0, 0, 1, 0.95))
-    fig.savefig(out / f"fig_stop_line_{cond}.png", dpi=150)
+    fig.savefig(out / f"fig_stop_line_{cond}_{REF}.png", dpi=150)
     plt.close(fig)
 
 
@@ -220,7 +232,7 @@ def pages(stop: pd.DataFrame, table: pd.DataFrame, out: Path, cond: str, per_pag
         for ax in axes.ravel()[len(chunk):]:
             ax.axis("off")
         for ax in axes[:, 0]:
-            ax.set_ylabel("stop level (logit minus the vocabulary mean)", fontsize=8)
+            ax.set_ylabel(f"stop level ({REFS[REF][1]})", fontsize=8)
         for ax in axes[-1, :]:
             ax.set_xlabel("thinking tokens of the trace", fontsize=8)
         handles = [plt.Line2D([], [], marker="o", ls="", color=COL["chosen"], label="chosen option, answer correct"),
@@ -230,7 +242,7 @@ def pages(stop: pd.DataFrame, table: pd.DataFrame, out: Path, cond: str, per_pag
         fig.legend(handles=handles, loc="upper right", ncol=4, fontsize=8, frameon=False)
         fig.suptitle(f"{cond}: where each trace stops, per prompt (page {pi} of {len(chunks)})", x=0.01, ha="left", fontsize=10, color=INK)
         fig.tight_layout(rect=(0, 0, 1, 0.97))
-        fig.savefig(out / f"stop_line_by_prompt_{cond}_p{pi}.png", dpi=110)
+        fig.savefig(out / f"stop_line_by_prompt_{cond}_{REF}_p{pi}.png", dpi=110)
         plt.close(fig)
     return len(chunks)
 
@@ -258,13 +270,13 @@ def histograms(stop: pd.DataFrame, table: pd.DataFrame, out: Path, cond: str, pe
             ax.set_ylabel("traces", fontsize=8)
         for ax in axes[-1, :]:
             ax.set_xlabel("level at the stop (nats)", fontsize=8)
-        handles = [plt.Rectangle((0, 0), 1, 1, color=COL["chosen"], alpha=0.6, label="chosen option: logit minus the vocabulary mean"),
-                   plt.Rectangle((0, 0), 1, 1, color=COL["unchosen"], alpha=0.6, label="unchosen option: logit minus the vocabulary mean"),
+        handles = [plt.Rectangle((0, 0), 1, 1, color=COL["chosen"], alpha=0.6, label=f"chosen option: {REFS[REF][1]}"),
+                   plt.Rectangle((0, 0), 1, 1, color=COL["unchosen"], alpha=0.6, label=f"unchosen option: {REFS[REF][1]}"),
                    plt.Line2D([], [], color=INK, lw=1.1, label="ln(p chosen / p unchosen) = chosen - unchosen;  2.3 = ratio 10, 6.9 = 1,000, 11.5 = 100,000")]
         fig.legend(handles=handles, loc="upper right", ncol=3, fontsize=8, frameon=False)
         fig.suptitle(f"{cond}: stop values per prompt (page {pi} of {len(chunks)})", x=0.01, ha="left", fontsize=10, color=INK)
         fig.tight_layout(rect=(0, 0, 1, 0.97))
-        fig.savefig(out / f"stop_hist_by_prompt_{cond}_p{pi}.png", dpi=110)
+        fig.savefig(out / f"stop_hist_by_prompt_{cond}_{REF}_p{pi}.png", dpi=110)
         plt.close(fig)
     return len(chunks)
 
@@ -273,7 +285,10 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--run", type=Path, required=True)
     ap.add_argument("--cond", default="baseline")
+    ap.add_argument("--ref", default="raw", choices=list(REFS), help="what to subtract from the letter logits")
     args = ap.parse_args()
+    global REF
+    REF = args.ref
     P = Paths(args.run)
     A = dict(np.load(args.run / "analysis" / "paths.npz"))
     if "z_A" not in A:
@@ -284,14 +299,14 @@ def main() -> None:
     stop = levels(P, A, rows, P.end[rows], chose_a)
     has = P.lv[rows] > 0
     before = levels(P, A, rows[has], P.off[rows[has]] + P.lv[rows[has]] - 1, chose_a[has])
-    res = {"cond": args.cond, "traces": int(len(rows)), "prompts": int(stop.item_id.nunique()),
+    res = {"cond": args.cond, "reference": REF, "traces": int(len(rows)), "prompts": int(stop.item_id.nunique()),
            "at_stop": spread(stop), "before_final_verdict": spread(before),
            "p_chosen_at_stop": {"above_0.99": float((stop.p_chosen > 0.99).mean()), "above_0.999": float((stop.p_chosen > 0.999).mean()),
                                 "below_0.9": float((stop.p_chosen < 0.9).mean())},
            "length_slopes_at_stop": length_slopes(stop), "stop_rule_at_verdicts": rule(P, A, keep)}
     out = args.run / "analysis"
     table = by_prompt(stop)
-    table.round(3).to_csv(out / f"stop_line_by_prompt_{args.cond}.csv", index=False)
+    table.round(3).to_csv(out / f"stop_line_by_prompt_{args.cond}_{REF}.csv", index=False)
     res["per_prompt"] = {
         "chosen_sd": {"median": float(table.chosen_sd.median()), "min": float(table.chosen_sd.min()), "max": float(table.chosen_sd.max()),
                       "below_1": float((table.chosen_sd < 1).mean()), "below_1.5": float((table.chosen_sd < 1.5).mean())},
@@ -310,7 +325,7 @@ def main() -> None:
         "chosen_falls_with_length": float((table.chosen_corr_log_tokens < 0).mean()),
         "chosen_corr_log_tokens": {"median": float(table.chosen_corr_log_tokens.median()), "below_-0.2": float((table.chosen_corr_log_tokens < -0.2).mean()),
                                    "above_0.2": float((table.chosen_corr_log_tokens > 0.2).mean())}}
-    (out / f"stop_line_{args.cond}.json").write_text(json.dumps(res, indent=1) + "\n")
+    (out / f"stop_line_{args.cond}_{REF}.json").write_text(json.dumps(res, indent=1) + "\n")
     figure(stop, out, args.cond)
     n_pages = pages(stop, table, out, args.cond)
     histograms(stop, table, out, args.cond)
@@ -321,7 +336,7 @@ def main() -> None:
           f"above 0.99 in {pc['above_0.99']:.3f}, above 0.999 in {pc['above_0.999']:.3f}, below 0.9 in {pc['below_0.9']:.4f}")
     for name, key in (("at the stop", "at_stop"), ("before the final verdict sentence", "before_final_verdict")):
         print(f"\n{name}:  {'':<16}{'median':>8}{'5%':>8}{'95%':>8}{'SD':>7}{'between prompts':>17}{'within prompt':>15}")
-        for col in ("rel_chosen", "rel_unchosen", "logit_chosen", "logit_unchosen", "vocab_mean", "X"):
+        for col in ("rel_chosen", "rel_unchosen", "logit_chosen", "logit_unchosen", "reference", "X"):
             e = res[key][col]
             print(f"   {col:<28}{e['median']:>8.2f}{e['p05']:>8.2f}{e['p95']:>8.2f}{e['sd']:>7.2f}{e['sd_between_prompts']:>17.2f}{e['sd_within_prompt']:>15.2f}")
         c = res[key]["corr_chosen_unchosen"]
@@ -331,7 +346,7 @@ def main() -> None:
         print(f"   {col:<16}{e['per_log_unit']:+.2f} [{e['ci'][0]:+.2f}, {e['ci'][1]:+.2f}]")
     r = res["stop_rule_at_verdicts"]
     print(f"\ndoes the thinking end after a verdict? {r['stops']} stops in {r['verdicts']} verdicts; coefficients per nat (se)")
-    print(f"   relative to the vocabulary mean: verdict's letter {r['rel']['coef'][0]:+.3f} ({r['rel']['se'][0]:.3f}), other letter {r['rel']['coef'][1]:+.3f} ({r['rel']['se'][1]:.3f})")
+    print(f"   relative to the vocabulary mean (or the other candidates in older readouts): verdict's letter {r['rel']['coef'][0]:+.3f} ({r['rel']['se'][0]:.3f}), other letter {r['rel']['coef'][1]:+.3f} ({r['rel']['se'][1]:.3f})")
     print(f"   raw logits:                   verdict's letter {r['logit']['coef'][0]:+.3f} ({r['logit']['se'][0]:.3f}), other letter {r['logit']['coef'][1]:+.3f} ({r['logit']['se'][1]:.3f})")
     e = r["logit_with_mean"]
     print(f"   raw logits + vocabulary mean: verdict's letter {e['coef'][0]:+.3f}, other letter {e['coef'][1]:+.3f}, vocabulary mean {e['coef'][2]:+.3f}")
@@ -351,8 +366,8 @@ def main() -> None:
           f"ln ratio {pp['ln_ratio_sd_median']:.2f}; IQR chosen {pp['iqr_median']['chosen']:.2f}, unchosen {pp['iqr_median']['unchosen']:.2f}, ln ratio {pp['iqr_median']['ln_ratio']:.2f}")
     print(f"   chosen narrower than the ratio in {pp['chosen_sd_below_ratio_sd']:.2f} of prompts by SD, {pp['chosen_iqr_below_ratio_iqr']:.2f} by IQR; "
           f"unchosen narrower than the ratio in {pp['unchosen_sd_below_ratio_sd']:.2f}")
-    print(f"-> {out}/stop_line_{args.cond}.json, stop_line_by_prompt_{args.cond}.csv, stop_line_by_prompt_{args.cond}_p1..{n_pages}.png, "
-          f"stop_hist_by_prompt_{args.cond}_p1..{n_pages}.png, fig_stop_line_{args.cond}.png")
+    print(f"-> {out}/stop_line_{args.cond}_{REF}.json, stop_line_by_prompt_{args.cond}_{REF}.csv, stop_line_by_prompt_{args.cond}_{REF}_p1..{n_pages}.png, "
+          f"stop_hist_by_prompt_{args.cond}_{REF}_p1..{n_pages}.png, fig_stop_line_{args.cond}_{REF}.png")
 
 
 if __name__ == "__main__":
