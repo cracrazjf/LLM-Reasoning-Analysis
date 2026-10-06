@@ -43,8 +43,9 @@ answer position the raw logits and log-probabilities of A and B (X = their diffe
 
 Per sentence of the thinking and at the stop (`readout.py`), in two contexts: closed (thinking
 cut and closed with `\n</think>\n\n`: the forced answer) and open (nothing appended: the model's own
-next token). Each gives raw logits and log-probabilities of A, B and `</think>`, the top 20
-candidates, and the mean, SD and log-sum-exp of the logits over the whole vocabulary. Values are
+next token). Each gives raw logits and log-probabilities of A, B and `</think>` and the mean, SD
+and log-sum-exp of the logits over the whole vocabulary; the open context also keeps its five top
+candidates (token ids and logits). Values are
 in steps of about 0.25 (half precision). Once per prompt: the closed context on the empty thinking
 block.
 
