@@ -47,7 +47,7 @@ from pathlib import Path
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).parent))
-from generate import ANSWER_TOP_LOGPROBS, MODEL, Tokens, chat_ids, load_llm, load_selection, vocab_stats_processor  # noqa: E402
+from generate import ANSWER_TOP_LOGPROBS, MODEL, MODEL_REVISION, Tokens, chat_ids, load_llm, load_selection, vocab_stats_processor  # noqa: E402
 
 SENTENCE_END = re.compile(r"[.!?][\"')\]]*\s*$")
 CLOSE = "\n</think>\n\n"
@@ -120,7 +120,9 @@ def main() -> None:
     done = done_ids(out)
     only = set(args.sample_ids.read_text(encoding="utf-8").splitlines()) if args.sample_ids else None
 
-    tok = AutoTokenizer.from_pretrained(MODEL, local_files_only=True)
+    from huggingface_hub import snapshot_download
+
+    tok = AutoTokenizer.from_pretrained(snapshot_download(MODEL, revision=MODEL_REVISION, local_files_only=True))
     tokens = Tokens(tok, tuple(selection["prompts"][0]["options"]))
     watch = [tokens.options["A"], tokens.options["B"], tokens.think_end]
     processor = vocab_stats_processor(watch) if stats_on else None

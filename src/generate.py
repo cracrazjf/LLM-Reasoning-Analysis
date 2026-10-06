@@ -148,11 +148,18 @@ def vocab_stats_processor(watch_ids: list[int]):
             VocabStats.instance = self
 
         def is_argmax_invariant(self) -> bool:
-            return True
+            return False   # vLLM runs argmax-invariant processors only for random sampling; the readouts are greedy
 
         def update_state(self, batch_update: BatchUpdate | None) -> None:
             if batch_update is None:
                 return
+            # vLLM's own order: added, then removed, then moved
+            for index, params, _prompt, _output in batch_update.added:
+                tag = (getattr(params, "extra_args", None) or {}).get("tag")
+                if tag is None:
+                    self.rows.pop(index, None)
+                else:
+                    self.rows[index] = tag
             for index in batch_update.removed:
                 self.rows.pop(index, None)
             for a, b, direction in batch_update.moved:
@@ -161,12 +168,6 @@ def vocab_stats_processor(watch_ids: list[int]):
                     self.rows[b] = ra
                 if direction == MoveDirectionality.SWAP and rb is not None:
                     self.rows[a] = rb
-            for index, params, _prompt, _output in batch_update.added:
-                tag = (getattr(params, "extra_args", None) or {}).get("tag")
-                if tag is None:
-                    self.rows.pop(index, None)
-                else:
-                    self.rows[index] = tag
 
         def apply(self, logits):
             if self.rows:
