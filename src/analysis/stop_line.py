@@ -201,6 +201,7 @@ def pages(stop: pd.DataFrame, table: pd.DataFrame, out: Path, cond: str, per_pag
     chunks = [items[i:i + per_page] for i in range(0, len(items), per_page)]
     info = table.set_index("item_id")
     hi = np.ceil(stop.rel_chosen.quantile(0.999))
+    lo = min(0.0, np.floor(stop.rel_unchosen.quantile(0.002)) - 1)
     for pi, chunk in enumerate(chunks, 1):
         fig, axes = plt.subplots(4, 5, figsize=(16, 11), sharey=True)
         for ax, item in zip(axes.ravel(), chunk):
@@ -212,7 +213,7 @@ def pages(stop: pd.DataFrame, table: pd.DataFrame, out: Path, cond: str, per_pag
             e = info.loc[item]
             ax.axhline(e.chosen_median, color=COL["chosen"], lw=0.9, ls=":")
             ax.set_xlim(0, g.tokens.quantile(0.98) * 1.05)
-            ax.set_ylim(0, hi)
+            ax.set_ylim(lo, hi)
             ax.set_title(f"{item.split(':', 1)[1]}   correct {e.accuracy:.2f}\nchosen {e.chosen_median:.1f} (SD {e.chosen_sd:.1f}), unchosen {e.unchosen_median:.1f} (SD {e.unchosen_sd:.1f})",
                          fontsize=7.5, color=INK, loc="left")
             style(ax)
@@ -238,7 +239,7 @@ def histograms(stop: pd.DataFrame, table: pd.DataFrame, out: Path, cond: str, pe
     items = sorted(stop.item_id.unique())
     chunks = [items[i:i + per_page] for i in range(0, len(items), per_page)]
     info = table.set_index("item_id")
-    lo, hi = -4.0, float(np.ceil(stop.rel_chosen.quantile(0.999)))
+    lo, hi = min(-4.0, float(np.floor(stop.X.quantile(0.002)))), float(np.ceil(stop.rel_chosen.quantile(0.999)))
     edges = np.arange(lo - 0.125, hi + 0.5, 0.5)    # readouts come in steps of 0.25: two steps per bin
     for pi, chunk in enumerate(chunks, 1):
         fig, axes = plt.subplots(4, 5, figsize=(16, 11), sharex=True, sharey=True)
