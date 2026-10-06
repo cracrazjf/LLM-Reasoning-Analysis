@@ -6,7 +6,7 @@ Uses <run>/analysis/paths.npz with raw logits (readout.py --logits, then paths.p
 chosen option is the letter answered after </think>. Three scales for each option:
   p        probability of the option as the forced answer (chosen + unchosen = 1, almost exactly)
   logit    raw logit (no fixed zero)
-  rel      logit minus the level of the other stored candidates (log-odds against non-letter tokens)
+  rel      logit minus the mean logit over the whole vocabulary (the level pinned at every position)
 read at the stop (after the last sentence) and before the final verdict sentence.
 
 1. spread   SD of each level over traces, split into between prompts (pair x order) and within
@@ -84,19 +84,19 @@ def fe_logit(y: np.ndarray, Z: np.ndarray, strata: np.ndarray, iters: int = 60) 
 
 def levels(P: Paths, A: dict[str, np.ndarray], rows: np.ndarray, at: np.ndarray, letter_a: np.ndarray) -> pd.DataFrame:
     """Chosen / unchosen levels of traces `rows` at flat sentence indices `at`; letter_a: the chosen letter is A."""
-    za, zb, oth = A["z_A"][at].astype(float), A["z_B"][at].astype(float), A["lse_other"][at].astype(float)
+    za, zb, oth = A["z_A"][at].astype(float), A["z_B"][at].astype(float), A["mean"][at].astype(float)
     la, lb = A["logp_A"][at].astype(float), A["logp_B"][at].astype(float)
     c, u = np.where(letter_a, za, zb), np.where(letter_a, zb, za)
     return pd.DataFrame({
         "item_id": P.T.item_id.values[rows], "source_id": P.T.source_id.values[rows], "tokens": P.T.think_tokens.values[rows].astype(float),
         "correct": P.T.correct.values[rows].astype(float),
         "p_chosen": np.exp(np.where(letter_a, la, lb)), "p_unchosen": np.exp(np.where(letter_a, lb, la)),
-        "logit_chosen": c, "logit_unchosen": u, "rel_chosen": c - oth, "rel_unchosen": u - oth, "other": oth, "X": c - u})
+        "logit_chosen": c, "logit_unchosen": u, "rel_chosen": c - oth, "rel_unchosen": u - oth, "vocab_mean": oth, "X": c - u})
 
 
 def spread(d: pd.DataFrame) -> dict:
     out = {}
-    for col in ("p_chosen", "logit_chosen", "logit_unchosen", "rel_chosen", "rel_unchosen", "other", "X"):
+    for col in ("p_chosen", "logit_chosen", "logit_unchosen", "rel_chosen", "rel_unchosen", "vocab_mean", "X"):
         g = d.groupby("item_id")[col]
         out[col] = {"median": float(d[col].median()), "p05": float(d[col].quantile(0.05)), "p95": float(d[col].quantile(0.95)),
                     "sd": float(d[col].std()), "sd_between_prompts": float(g.mean().std()),
@@ -130,12 +130,12 @@ def rule(P: Paths, A: dict[str, np.ndarray], keep: np.ndarray) -> dict:
     rows = np.where(P.isv & keep[tr] & P.ends_on_verdict[tr] & np.isfinite(A["z_A"]) & np.isfinite(A["z_B"]))[0]
     y = (k[rows] == P.lv[tr[rows]]).astype(float)
     is_a = P.V[rows] == 1
-    za, zb, oth = A["z_A"][rows].astype(float), A["z_B"][rows].astype(float), A["lse_other"][rows].astype(float)
+    za, zb, oth = A["z_A"][rows].astype(float), A["z_B"][rows].astype(float), A["mean"][rows].astype(float)
     own, other_letter = np.where(is_a, za, zb), np.where(is_a, zb, za)
     item = pd.factorize(P.T.item_id)[0][tr[rows]]
     out = {"verdicts": int(len(y)), "stops": int(y.sum())}
     for name, Z in (("rel", np.c_[own - oth, other_letter - oth]), ("logit", np.c_[own, other_letter]),
-                    ("logit_with_other", np.c_[own, other_letter, oth]), ("difference_only", np.c_[own - other_letter])):
+                    ("logit_with_mean", np.c_[own, other_letter, oth]), ("difference_only", np.c_[own - other_letter])):
         b, se, ll = fe_logit(y, Z, item)
         out[name] = {"coef": [float(v) for v in b], "se": [float(v) for v in se], "loglik": ll}
     return out
@@ -153,7 +153,7 @@ def figure(stop: pd.DataFrame, out: Path, cond: str) -> None:
         ax.plot(x + off, g[(col, 0.5)], "o" if name == "chosen" else "s", ms=3.5, color=COL[name], mec="white", mew=0.4, label=f"{name} option")
     ax.axhline(stop.rel_chosen.median(), color=COL["chosen"], lw=0.8, ls=":")
     ax.set_xlabel(f"{len(g)} prompts (pair x order), ordered by the unchosen level")
-    ax.set_ylabel("logit minus the level of the other candidates, at the stop")
+    ax.set_ylabel("logit minus the vocabulary mean, at the stop")
     ax.set_title("a  Stop levels per prompt: median and middle half of its traces", loc="left", fontsize=10, color=INK)
     ax.legend(fontsize=8, frameon=False, loc="lower right")
     ax = axes[1]
@@ -219,7 +219,7 @@ def pages(stop: pd.DataFrame, table: pd.DataFrame, out: Path, cond: str, per_pag
         for ax in axes.ravel()[len(chunk):]:
             ax.axis("off")
         for ax in axes[:, 0]:
-            ax.set_ylabel("stop level (logit minus other candidates)", fontsize=8)
+            ax.set_ylabel("stop level (logit minus the vocabulary mean)", fontsize=8)
         for ax in axes[-1, :]:
             ax.set_xlabel("thinking tokens of the trace", fontsize=8)
         handles = [plt.Line2D([], [], marker="o", ls="", color=COL["chosen"], label="chosen option, answer correct"),
@@ -257,8 +257,8 @@ def histograms(stop: pd.DataFrame, table: pd.DataFrame, out: Path, cond: str, pe
             ax.set_ylabel("traces", fontsize=8)
         for ax in axes[-1, :]:
             ax.set_xlabel("level at the stop (nats)", fontsize=8)
-        handles = [plt.Rectangle((0, 0), 1, 1, color=COL["chosen"], alpha=0.6, label="chosen option: logit minus other candidates"),
-                   plt.Rectangle((0, 0), 1, 1, color=COL["unchosen"], alpha=0.6, label="unchosen option: logit minus other candidates"),
+        handles = [plt.Rectangle((0, 0), 1, 1, color=COL["chosen"], alpha=0.6, label="chosen option: logit minus the vocabulary mean"),
+                   plt.Rectangle((0, 0), 1, 1, color=COL["unchosen"], alpha=0.6, label="unchosen option: logit minus the vocabulary mean"),
                    plt.Line2D([], [], color=INK, lw=1.1, label="ln(p chosen / p unchosen) = chosen - unchosen;  2.3 = ratio 10, 6.9 = 1,000, 11.5 = 100,000")]
         fig.legend(handles=handles, loc="upper right", ncol=3, fontsize=8, frameon=False)
         fig.suptitle(f"{cond}: stop values per prompt (page {pi} of {len(chunks)})", x=0.01, ha="left", fontsize=10, color=INK)
@@ -320,7 +320,7 @@ def main() -> None:
           f"above 0.99 in {pc['above_0.99']:.3f}, above 0.999 in {pc['above_0.999']:.3f}, below 0.9 in {pc['below_0.9']:.4f}")
     for name, key in (("at the stop", "at_stop"), ("before the final verdict sentence", "before_final_verdict")):
         print(f"\n{name}:  {'':<16}{'median':>8}{'5%':>8}{'95%':>8}{'SD':>7}{'between prompts':>17}{'within prompt':>15}")
-        for col in ("rel_chosen", "rel_unchosen", "logit_chosen", "logit_unchosen", "other", "X"):
+        for col in ("rel_chosen", "rel_unchosen", "logit_chosen", "logit_unchosen", "vocab_mean", "X"):
             e = res[key][col]
             print(f"   {col:<28}{e['median']:>8.2f}{e['p05']:>8.2f}{e['p95']:>8.2f}{e['sd']:>7.2f}{e['sd_between_prompts']:>17.2f}{e['sd_within_prompt']:>15.2f}")
         c = res[key]["corr_chosen_unchosen"]
@@ -330,11 +330,11 @@ def main() -> None:
         print(f"   {col:<16}{e['per_log_unit']:+.2f} [{e['ci'][0]:+.2f}, {e['ci'][1]:+.2f}]")
     r = res["stop_rule_at_verdicts"]
     print(f"\ndoes the thinking end after a verdict? {r['stops']} stops in {r['verdicts']} verdicts; coefficients per nat (se)")
-    print(f"   relative to other candidates: verdict's letter {r['rel']['coef'][0]:+.3f} ({r['rel']['se'][0]:.3f}), other letter {r['rel']['coef'][1]:+.3f} ({r['rel']['se'][1]:.3f})")
+    print(f"   relative to the vocabulary mean: verdict's letter {r['rel']['coef'][0]:+.3f} ({r['rel']['se'][0]:.3f}), other letter {r['rel']['coef'][1]:+.3f} ({r['rel']['se'][1]:.3f})")
     print(f"   raw logits:                   verdict's letter {r['logit']['coef'][0]:+.3f} ({r['logit']['se'][0]:.3f}), other letter {r['logit']['coef'][1]:+.3f} ({r['logit']['se'][1]:.3f})")
-    e = r["logit_with_other"]
-    print(f"   raw logits + other level:     verdict's letter {e['coef'][0]:+.3f}, other letter {e['coef'][1]:+.3f}, other candidates {e['coef'][2]:+.3f}")
-    print(f"   log-likelihood: difference only {r['difference_only']['loglik']:.0f}, two letters (relative) {r['rel']['loglik']:.0f}, two letters + other level {e['loglik']:.0f}")
+    e = r["logit_with_mean"]
+    print(f"   raw logits + vocabulary mean: verdict's letter {e['coef'][0]:+.3f}, other letter {e['coef'][1]:+.3f}, vocabulary mean {e['coef'][2]:+.3f}")
+    print(f"   log-likelihood: difference only {r['difference_only']['loglik']:.0f}, two letters (relative) {r['rel']['loglik']:.0f}, two letters + vocabulary mean {e['loglik']:.0f}")
     pp = res["per_prompt"]
     print(f"\nper prompt ({len(table)}): median chosen stop level from {pp['chosen_median']['min']:.1f} to {pp['chosen_median']['max']:.1f} "
           f"(quartiles {pp['chosen_median']['p25']:.1f} / {pp['chosen_median']['median']:.1f} / {pp['chosen_median']['p75']:.1f})")

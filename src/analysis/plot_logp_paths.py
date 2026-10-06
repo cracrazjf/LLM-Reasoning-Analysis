@@ -12,8 +12,10 @@ model answered after </think>, the unchosen option is the other one.
                          level of the other stored candidates (log-sum-exp of their logits).
                          A logit has no fixed zero, so read differences between curves and
                          changes along a curve, not heights
-         logit_vs_other  logit of each letter minus the level of the other candidates: the
-                         log-odds of that letter against anything that is not A or B
+         logit_vs_mean   logit of each letter minus the mean logit over the whole vocabulary:
+                         the level pinned at every position (the reference agreed on 2026-10-05)
+         logit_vs_other  logit of each letter minus the level of the other stored candidates
+                         (runs read out before 2026-10-06 only)
 
 fig_<value>_chosen_unchosen_<cond>.png   median and middle half (25th to 75th percentile) over traces
   a  all traces, position as a share of the trace's sentences
@@ -43,12 +45,13 @@ from paths import load_paths  # noqa: E402
 
 COL = {"chosen": "#2a78d6", "unchosen": "#eb6834", "other": "#8a8985"}
 STYLE = {"chosen": "-", "unchosen": "--", "other": ":"}
-NAME = {"chosen": "chosen option", "unchosen": "unchosen option", "other": "other candidates"}
+NAME = {"chosen": "chosen option", "unchosen": "unchosen option", "other": "vocabulary mean"}
 INK, MUTED, GRID = "#0b0b0b", "#52514e", "#e4e3df"
 LONG, HEAD, TAIL, BIN = 60, 60, 40, 100
 VALUES = {   # y label, axis limits (None: from the data), floor at which lower values are drawn
     "logp": ("log-probability of the option as the answer", (-16.0, 0.4), -16.0),
     "logit": ("raw logit", None, -np.inf),
+    "logit_vs_mean": ("logit minus the vocabulary mean", None, -np.inf),
     "logit_vs_other": ("logit minus the level of the other candidates", None, -np.inf),
 }
 
@@ -85,15 +88,18 @@ class Data:
             x0 = self.T.X0.astype(float).values
             a0, b0 = -np.logaddexp(0, -x0), -np.logaddexp(0, x0)
         else:
-            ref = A["lse_other"][idx].astype(float) if value == "logit_vs_other" else 0.0
-            ref0 = self.T.lse0_other.astype(float).values if value == "logit_vs_other" else 0.0
+            refs = {"logit_vs_other": (A["lse_other"], "lse0_other"), "logit_vs_mean": (A["mean"], "mean0")}
+            ref = refs[value][0][idx].astype(float) if value in refs else 0.0
+            ref0 = self.T[refs[value][1]].astype(float).values if value in refs else 0.0
             a, b = A["z_A"][idx].astype(float) - ref, A["z_B"][idx].astype(float) - ref
             a0, b0 = self.T.z0_A.astype(float).values - ref0, self.T.z0_B.astype(float).values - ref0
         self.lp = {"chosen": np.where(sent_a, a, b), "unchosen": np.where(sent_a, b, a)}
         self.lp0 = {"chosen": np.where(is_a, a0, b0), "unchosen": np.where(is_a, b0, a0)}
         if value == "logit":
-            self.lp["other"] = A["lse_other"][idx].astype(float)
-            self.lp0["other"] = self.T.lse0_other.astype(float).values
+            has_mean = np.isfinite(A["mean"][idx]).any()
+            self.lp["other"] = (A["mean"] if has_mean else A["lse_other"])[idx].astype(float)
+            self.lp0["other"] = self.T["mean0" if has_mean else "lse0_other"].astype(float).values
+            NAME["other"] = "vocabulary mean" if has_mean else "other candidates"
         self.series = list(self.lp)
 
 
@@ -166,7 +172,7 @@ def per_prompt(D: Data, out: Path, cond: str, value: str, n_traces: int, per_pag
         for ax in axes.ravel()[len(page):]:
             ax.axis("off")
         for ax in axes[:, 0]:
-            ax.set_ylabel(D.ylabel if value != "logit_vs_other" else "logit minus other candidates", fontsize=8)
+            ax.set_ylabel(D.ylabel, fontsize=8)
         for ax in axes[-1, :]:
             ax.set_xlabel("thinking tokens", fontsize=8)
         handles = [plt.Line2D([], [], color=COL[k], ls=STYLE[k], lw=2.2, label=f"{NAME[k]}, median of the prompt's traces") for k in D.series]
