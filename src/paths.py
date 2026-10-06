@@ -105,9 +105,15 @@ def sentence_values(r: dict, z: dict | None, letters: set[int]) -> dict[str, np.
     nan = np.full(n, np.nan, dtype=np.float32)
     if "closed" in r:
         c, o = r["closed"], r["open"]
-        oth = [others_level(ids, zs, letters) for ids, zs in zip(c["top_ids"], c["top_logits"])]
+        if "top_ids" in c:
+            oth = [others_level(ids, zs, letters) for ids, zs in zip(c["top_ids"], c["top_logits"])]
+            lse_other, max_other = floats([x[0] for x in oth]), floats([x[1] for x in oth])
+        else:   # no candidates stored for the closed context: the level of everything that is not a letter, from the vocabulary total
+            lse, za, zb = floats(c["lse"]), floats(c["z_A"]), floats(c["z_B"])
+            lse_other = lse + np.log1p(-np.exp(za - lse) - np.exp(zb - lse)).astype(np.float32)
+            max_other = nan
         return {"X": floats(c["z_A"]) - floats(c["z_B"]), "logp_A": floats(c["logp_A"]), "logp_B": floats(c["logp_B"]),
-                "z_A": floats(c["z_A"]), "z_B": floats(c["z_B"]), "lse_other": floats([x[0] for x in oth]), "max_other": floats([x[1] for x in oth]),
+                "z_A": floats(c["z_A"]), "z_B": floats(c["z_B"]), "lse_other": lse_other, "max_other": max_other,
                 "lse": floats(c["lse"]), "mean": floats(c["mean"]), "sd": floats(c["sd"]),
                 "z_think": floats(o["z_think"]), "logp_think": floats(o["logp_think"])}
     v = {"X": floats(r["X"]), "logp_A": floats(r["logp_A"]), "logp_B": floats(r["logp_B"])}
@@ -123,7 +129,7 @@ def start_values(s: dict | None, sz: dict | None, letters: set[int]) -> dict[str
     if s is None:
         return {k: None for k in START_KEYS}
     if "lse" in s:   # current format
-        oth = others_level(s["top_ids"], s["top_logits"], letters)[0]
+        oth = s["lse"] + float(np.log1p(-np.exp(s["z_A"] - s["lse"]) - np.exp(s["z_B"] - s["lse"])))
         return {"X0": s["z_A"] - s["z_B"], "z0_A": s["z_A"], "z0_B": s["z_B"], "lse0_other": oth, "lse0": s["lse"], "mean0": s["mean"]}
     sz = sz or {}
     return {"X0": s.get("X"), "z0_A": sz.get("z_A"), "z0_B": sz.get("z_B"), "lse0_other": sz.get("lse_other"), "lse0": None, "mean0": None}

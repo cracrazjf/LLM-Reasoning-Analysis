@@ -14,13 +14,14 @@ starting with whitespace; the position is the next sentence's first non-blank to
           the forced answer. z_A, z_B (raw logits), logp_A, logp_B.
   open    prompt + thinking so far, nothing appended: the model's own next token. z_think and
           logp_think for </think> (would it stop here?), plus z_A, z_B.
-Both contexts also record the top candidates (token ids and logits) and, over the whole
-vocabulary, the mean, standard deviation and log-sum-exp of the logits. A logit has no fixed
-zero; the log-sum-exp turns it into a probability (logp = z - lse) and the mean is a reference.
-The full-vocabulary values come from a logits processor that reads every row before vLLM keeps
-only the top candidates; with --no-vocab-stats they are skipped, logp is computed from the top
-candidates (the two letters hold almost all the probability) and z_think is known only when
-</think> is among them.
+Both contexts also record, over the whole vocabulary, the mean, standard deviation and
+log-sum-exp of the logits: one number each. A logit has no fixed zero; the log-sum-exp turns it
+into a probability (logp = z - lse) and the mean pins the zero at every position. The open context
+keeps its top candidates (--top, default 5: token ids and logits), the words the model would
+write next. The full-vocabulary values come from a logits processor that reads every row before
+vLLM keeps only the top candidates; with --no-vocab-stats they are skipped, logp is computed from
+the 20 candidates vLLM returns (the two letters hold almost all the probability) and z_think is
+known only when </think> is among them.
 
 Also read once per prompt: the closed context on Qwen3's empty thinking block
 "<think>\\n\\n</think>\\n\\n" (readouts_start.jsonl), the answer before any reasoning.
@@ -143,7 +144,7 @@ def main() -> None:
     ap.add_argument("--selection", required=True, type=Path, help="the selection file the run was generated from")
     ap.add_argument("--sample-ids", type=Path, help="read out only the traces listed in this file")
     ap.add_argument("--no-vocab-stats", action="store_true", help="skip the full-vocabulary values (no logits processor)")
-    ap.add_argument("--top", type=int, default=ANSWER_TOP_LOGPROBS, help="candidates stored per readout")
+    ap.add_argument("--top", type=int, default=5, help="candidates stored for the open context")
     ap.add_argument("--limit", type=int, default=0, help="only the first N traces (smoke test)")
     ap.add_argument("--max-traces", type=int, default=128,
                     help="traces being read out at once; their prefixes must fit the KV cache (380k tokens on an A100 80GB)")
@@ -169,7 +170,7 @@ def main() -> None:
     tokens = Tokens(tok, tuple(selection["prompts"][0]["options"]))
     watch = [tokens.options["A"], tokens.options["B"], tokens.think_end]
     processor = vocab_stats_processor(watch) if stats_on else None
-    llm, _ = load_llm(args.max_num_seqs, max_logprobs=args.top, logprobs_mode="raw_logits",
+    llm, _ = load_llm(args.max_num_seqs, max_logprobs=ANSWER_TOP_LOGPROBS, logprobs_mode="raw_logits",
                       max_num_batched_tokens=args.max_num_batched_tokens,
                       **({"logits_processors": [processor]} if processor else {}))
     engine = llm.llm_engine
@@ -183,11 +184,11 @@ def main() -> None:
 
     def params(rid: str) -> SamplingParams:
         kw = {"extra_args": {"tag": rid}} if stats_on else {}
-        return SamplingParams(max_tokens=1, temperature=0.0, logprobs=args.top, output_kind=RequestOutputKind.FINAL_ONLY, **kw)
+        return SamplingParams(max_tokens=1, temperature=0.0, logprobs=ANSWER_TOP_LOGPROBS, output_kind=RequestOutputKind.FINAL_ONLY, **kw)
 
-    def read(rid: str, o: Any) -> dict[str, Any]:
-        """One readout: the watched logits, their log-probabilities, the top candidates and the vocabulary values."""
-        top = {k: v.logprob for k, v in o.outputs[0].logprobs[0].items()}   # raw logits of the top candidates
+    def read(rid: str, o: Any, keep_top: bool) -> dict[str, Any]:
+        """One readout: the watched logits, their log-probabilities, the vocabulary values and, if asked, the top candidates."""
+        top = {k: v.logprob for k, v in o.outputs[0].logprobs[0].items()}   # raw logits of the candidates vLLM returns
         order = sorted(top, key=top.get, reverse=True)[: args.top]
         s = stats.out.pop(rid, None) if stats_on else None
         if s is not None:
@@ -201,7 +202,8 @@ def main() -> None:
         for name, t in (("A", tokens.options["A"]), ("B", tokens.options["B"]), ("think", tokens.think_end)):
             rec[f"z_{name}"] = z[t]
             rec[f"logp_{name}"] = None if z[t] is None else z[t] - lse
-        rec["top_ids"], rec["top_logits"] = order, [top[t] for t in order]
+        if keep_top:
+            rec["top_ids"], rec["top_logits"] = order, [top[t] for t in order]
         return rec
 
     def rounded(rec: dict[str, Any]) -> dict[str, Any]:
@@ -216,7 +218,7 @@ def main() -> None:
         while engine.has_unfinished_requests():
             for o in engine.step():
                 if o.finished:
-                    got[o.request_id] = read(o.request_id, o)
+                    got[o.request_id] = read(o.request_id, o, keep_top=False)
         return got
 
     start_path = out / "readouts_start.jsonl"
@@ -268,7 +270,7 @@ def main() -> None:
                 continue
             sid, p, ctx = o.request_id.rsplit("@", 2)
             t = active[sid]
-            t["got"][(int(p), ctx)] = read(o.request_id, o)
+            t["got"][(int(p), ctx)] = read(o.request_id, o, keep_top=(ctx == "open"))
             n_done += 1
             if len(t["got"]) == 1:
                 for q, _ in t["pos"]:
