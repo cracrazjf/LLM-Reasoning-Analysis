@@ -16,12 +16,10 @@ stored; a line cut off by a crash is re-sampled.
 Stored per trace (one JSON line): the selection fields, generated token ids and
 text, the raw log-probability of every sampled token, thinking length (tokens
 between <think> and </think>), the final answer and whether it is correct, and at
-the answer position (after the model's own "</think>\n\n") the raw next-token
-distribution: logp_A, logp_B, X = logp_A - logp_B, the raw logits z_A, z_B, z_think,
-and over the whole vocabulary the mean, SD and log-sum-exp of the logits
-(vocab_mean, vocab_sd, vocab_lse; from the logits processor below, skipped with
---no-vocab-stats). Anything else (answers forced at truncation points:
-src/readout.py) is recomputed from the stored token ids.
+the answer position (after the model's own "</think>\n\n") logp_A, logp_B and
+X = logp_A - logp_B from the raw next-token distribution. Everything else (raw
+logits, vocabulary statistics, answers forced at truncation points) is a readout
+over the stored token ids: src/readout.py.
 """
 
 from __future__ import annotations
@@ -29,7 +27,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import os
 import time
 from pathlib import Path
 from typing import Any
@@ -207,12 +204,8 @@ def main() -> None:
     ap.add_argument("--prompts", type=int, default=0, help="use only the first N prompts (smoke test)")
     ap.add_argument("--max-num-seqs", type=int, default=256, help="vLLM batch size")
     ap.add_argument("--max-inflight", type=int, default=384, help="traces queued in the engine at once")
-    ap.add_argument("--no-vocab-stats", action="store_true", help="skip the full-vocabulary values at the answer position")
     ap.add_argument("--log-every", type=int, default=500)
     args = ap.parse_args()
-    stats_on = not args.no_vocab_stats
-    if stats_on:
-        os.environ["VLLM_ENABLE_V1_MULTIPROCESSING"] = "0"   # the logits processor must live in this process
 
     import torch
     import vllm
@@ -227,18 +220,11 @@ def main() -> None:
     out.mkdir(parents=True, exist_ok=True)
     done = done_ids(out)
 
-    from transformers import AutoTokenizer
-
-    tok = AutoTokenizer.from_pretrained(MODEL, local_files_only=True)
-    tokens = Tokens(tok, letters)
-    watch = [tokens.options["A"], tokens.options["B"], tokens.think_end]
-    processor = vocab_stats_processor(watch) if stats_on else None
-    llm, model_path = load_llm(args.max_num_seqs, **({"logits_processors": [processor]} if processor else {}))
+    llm, model_path = load_llm(args.max_num_seqs)
     engine = llm.llm_engine
-    stats = processor.instance if processor else None
-    if stats_on and stats is None:
-        raise SystemExit("the logits processor was not instantiated in this process; rerun with --no-vocab-stats")
     FINAL = RequestOutputKind.FINAL_ONLY  # step() returns a request only when it has finished
+    tok = llm.get_tokenizer()
+    tokens = Tokens(tok, letters)
     prompt_ids = {p["prompt_id"]: chat_ids(tok, p["messages"]) for p in prompts}
     by_id = {p["prompt_id"]: p for p in prompts}
 
@@ -250,7 +236,7 @@ def main() -> None:
         "n_prompts": len(prompts), "sessions": []}
     session = {"started": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "vllm": vllm.__version__,
                "torch": torch.__version__, "gpu": torch.cuda.get_device_name(0),
-               "model_revision": Path(model_path).name, "already_done": len(done), "vocab_stats": stats_on}
+               "model_revision": Path(model_path).name, "already_done": len(done)}
     manifest["sessions"].append(session)
     manifest_path.write_text(json.dumps(manifest, indent=1) + "\n")
 
@@ -294,10 +280,6 @@ def main() -> None:
             if kind == "x":  # answer-position readout for a finished trace
                 rec = pending.pop(sample_id)
                 rec.update(answer_x(o.outputs[0].logprobs[0], tokens))
-                s = stats.out.pop(o.request_id, None) if stats_on else None
-                z = dict(zip(watch, s["watch"])) if s else {}
-                rec.update({"z_A": z.get(watch[0]), "z_B": z.get(watch[1]), "z_think": z.get(watch[2]),
-                            "vocab_mean": s["mean"] if s else None, "vocab_sd": s["sd"] if s else None, "vocab_lse": s["lse"] if s else None})
                 write(rec)
                 continue
             inflight -= 1
@@ -324,8 +306,7 @@ def main() -> None:
             pending[sample_id] = rec
             engine.add_request(f"x|{sample_id}",
                                {"prompt_token_ids": prompt_ids[pid] + gen[: parsed["answer_pos"]]},
-                               SamplingParams(max_tokens=1, temperature=0.0, logprobs=ANSWER_TOP_LOGPROBS, output_kind=FINAL,
-                                              **({"extra_args": {"tag": f"x|{sample_id}"}} if stats_on else {})))
+                               SamplingParams(max_tokens=1, temperature=0.0, logprobs=ANSWER_TOP_LOGPROBS, output_kind=FINAL))
     writer.close()
     session["finished"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     session["written"] = written

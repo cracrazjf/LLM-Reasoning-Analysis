@@ -8,8 +8,10 @@ the traces of the run and can be redone or extended at any time.
 
 Positions (p = number of generated tokens kept): every sentence start inside the thinking (a
 sentence ends at a token that contains a line break, or that ends in . ! ? with the next token
-starting with whitespace; the position is the next sentence's first non-blank token) and the stop
-(where the model itself wrote </think>). Each position is read in two contexts:
+starting with whitespace; the position is the next sentence's first non-blank token), the stop
+(where the model itself wrote </think>) and the answer position (after the model's own
+"</think>\n\n", kind "a": nothing is appended there in either context, so its two blocks agree).
+Each position is read in two contexts:
   closed  prompt + thinking so far + "\\n</think>\\n\\n", the way the model closes its thinking:
           the forced answer. z_A, z_B (raw logits), logp_A, logp_B.
   open    prompt + thinking so far, nothing appended: the model's own next token. z_think and
@@ -27,7 +29,7 @@ Also read once per prompt: the closed context on Qwen3's empty thinking block
 "<think>\\n\\n</think>\\n\\n" (readouts_start.jsonl), the answer before any reasoning.
 
 Output in <run>/readouts/: readouts-NN.jsonl, one line per trace with pos, kind ("s" sentence,
-"e" stop) and the two blocks "closed" and "open", each a dict of lists aligned with pos. An
+"e" stop, "a" answer position) and the two blocks "closed" and "open", each a dict of lists aligned with pos. An
 interrupted run resumes from the traces already written; --sample-ids FILE (one sample_id per
 line) restricts the readouts to those traces.
 """
@@ -72,8 +74,11 @@ def sentence_boundaries(gen: list[int], start: int, end: int, texts: list[str]) 
     return out
 
 
-def positions(gen: list[int], start: int, end: int, texts: list[str]) -> list[tuple[int, str]]:
-    return [(p, "s") for p in sentence_boundaries(gen, start, end, texts)] + [(end, "e")]
+def positions(gen: list[int], start: int, end: int, texts: list[str], answer_pos: int | None) -> list[tuple[int, str]]:
+    out = [(p, "s") for p in sentence_boundaries(gen, start, end, texts)] + [(end, "e")]
+    if answer_pos is not None:
+        out.append((answer_pos, "a"))
+    return out
 
 
 def done_ids(out: Path) -> set[str]:
@@ -191,7 +196,7 @@ def main() -> None:
             while start < end and not texts[gen[start]].strip():  # skip the newline after <think>
                 start += 1
             traces.append({"sample_id": r["sample_id"], "prompt_id": r["prompt_id"], "gen": gen,
-                           "think_start": start, "think_end": end, "pos": positions(gen, start, end, texts)})
+                           "think_start": start, "think_end": end, "pos": positions(gen, start, end, texts, r.get("answer_pos"))})
     if args.limit:
         traces = traces[: args.limit]
     total, n_read = len(traces), sum(2 * len(t["pos"]) for t in traces)
@@ -203,7 +208,8 @@ def main() -> None:
     written, n_done, t0 = 0, 0, time.time()
 
     def request(t: dict[str, Any], p: int, ctx: str) -> None:
-        ids = prompt_ids[t["prompt_id"]] + t["gen"][:p] + (close if ctx == "closed" else [])
+        own_close = p > t["think_end"]   # the answer position: the model's own closing tokens are already in the prefix
+        ids = prompt_ids[t["prompt_id"]] + t["gen"][:p] + (close if ctx == "closed" and not own_close else [])
         rid = f"{t['sample_id']}@{p}@{ctx}"
         engine.add_request(rid, {"prompt_token_ids": ids}, params(rid))
 

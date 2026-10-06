@@ -38,10 +38,10 @@ processor cannot be loaded, run with `--no-vocab-stats`.
 
 Per trace (`generate.py`): the selection fields, token ids and text, the log-probability of every
 sampled token, thinking length, finish reason, the parsed answer and its correctness, and at the
-answer position the raw logits and log-probabilities of A and B (X = their difference), the logit of
-`</think>`, and the mean, SD and log-sum-exp of the logits over the whole vocabulary.
+answer position the raw log-probabilities of A and B (X = their difference).
 
-Per sentence of the thinking and at the stop (`readout.py`), in two contexts: closed (thinking
+Per sentence of the thinking, at the stop and at the model's own answer position (`readout.py`), in
+two contexts: closed (thinking
 cut and closed with `\n</think>\n\n`: the forced answer) and open (nothing appended: the model's own
 next token). Each gives raw logits and log-probabilities of A, B and `</think>` and the mean, SD
 and log-sum-exp of the logits over the whole vocabulary; the open context also keeps its five top

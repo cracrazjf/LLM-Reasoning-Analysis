@@ -17,8 +17,8 @@ Writes <run>/analysis/paths.npz and paths_traces.parquet; other scripts read the
       z_A, z_B, lse_other and max_other (the stored candidates that are not a letter), lse, mean,
       sd (whole vocabulary); from the open context z_think, logp_think
   per trace: ids, condition, label, answer, correct, think_tokens, n (sentences), off (offset of
-      its first sentence in the flat arrays), and the prompt's readout with empty thinking: X0,
-      z0_A, z0_B, lse0_other, lse0, mean0
+      its first sentence in the flat arrays), the prompt's readout with empty thinking (X0, z0_A,
+      z0_B, lse0_other, lse0, mean0) and the readout at the model's own answer position (ans_*)
 Runs read out in 2026-10 with the earlier scripts (readouts/ with X and log p, readouts_logits/
 with the raw logits) load the same way; values they did not record are NaN.
 """
@@ -100,11 +100,14 @@ def others_level(ids: list[int], logits: list[float], letters: set[int]) -> tupl
 
 def sentence_values(r: dict, z: dict | None, letters: set[int]) -> dict[str, np.ndarray]:
     """One array per SENTENCE_KEYS from a readout record: the current format (closed and open blocks) or the
-    2026-10 format (readouts/ with X and log p, readouts_logits/ with z_A, z_B, lse_other, max_other)."""
-    n = len(r["pos"])
+    2026-10 format (readouts/ with X and log p, readouts_logits/ with z_A, z_B, lse_other, max_other).
+    The answer position (kind "a") is not a sentence and is left out here."""
+    keep = [i for i, k in enumerate(r["kind"]) if k != "a"]
+    n = len(keep)
     nan = np.full(n, np.nan, dtype=np.float32)
     if "closed" in r:
-        c, o = r["closed"], r["open"]
+        c = {k: [v[i] for i in keep] for k, v in r["closed"].items()}
+        o = {k: [v[i] for i in keep] for k, v in r["open"].items()}
         if "top_ids" in c:
             oth = [others_level(ids, zs, letters) for ids, zs in zip(c["top_ids"], c["top_logits"])]
             lse_other, max_other = floats([x[0] for x in oth]), floats([x[1] for x in oth])
@@ -122,6 +125,18 @@ def sentence_values(r: dict, z: dict | None, letters: set[int]) -> dict[str, np.
     for key in ("lse", "mean", "sd", "z_think", "logp_think"):
         v[key] = nan
     return v
+
+
+ANSWER_KEYS = ("ans_z_A", "ans_z_B", "ans_logp_A", "ans_logp_B", "ans_vocab_lse", "ans_vocab_mean")
+
+
+def answer_values(r: dict) -> dict[str, float | None]:
+    """The readout at the model's own answer position (kind "a"), when the record has one."""
+    if "a" not in r["kind"]:
+        return {k: None for k in ANSWER_KEYS}
+    i, c = r["kind"].index("a"), r["closed"]
+    return {"ans_z_A": c["z_A"][i], "ans_z_B": c["z_B"][i], "ans_logp_A": c["logp_A"][i], "ans_logp_B": c["logp_B"][i],
+            "ans_vocab_lse": c["vocab_lse"][i], "ans_vocab_mean": c["vocab_mean"][i]}
 
 
 def start_values(s: dict | None, sz: dict | None, letters: set[int]) -> dict[str, float | None]:
@@ -149,7 +164,8 @@ def build(run: Path) -> tuple[pd.DataFrame, dict[str, np.ndarray]]:
         r = readouts.get(t["sample_id"])
         if r is None:
             continue
-        gen, pos = t["token_ids"], r["pos"]
+        gen = t["token_ids"]
+        pos = [p for p, k in zip(r["pos"], r["kind"]) if k != "a"]
         starts = [r["think_start"]] + pos[:-1]
         v = [verdict("".join(texts[g] for g in gen[a:b])) for a, b in zip(starts, pos)]
         answer, _ = parse_answer(t["answer_text"], ("A", "B"))
@@ -161,7 +177,7 @@ def build(run: Path) -> tuple[pd.DataFrame, dict[str, np.ndarray]]:
             "source_id": t["source_id"], "order": t["order"], "cond": COND.get(t["condition"], t["condition"]),
             "label": t["label"], "answer": answer, "correct": (answer == t["label"]) if answer else None,
             "think_tokens": t["think_tokens"], "n": len(pos), "off": off,
-            **start_values(start.get(t["prompt_id"]), start_logits.get(t["prompt_id"]), letters),
+            **start_values(start.get(t["prompt_id"]), start_logits.get(t["prompt_id"]), letters), **answer_values(r),
         })
         for key, arr in sentence_values(r, z, letters).items():
             cols[key].append(arr)
