@@ -326,6 +326,45 @@ def paper_histograms(stop: pd.DataFrame, table: pd.DataFrame, out: Path, cond: s
     return len(chunks)
 
 
+def paper_prob_histograms(stop: pd.DataFrame, table: pd.DataFrame, out: Path, cond: str, per_page: int = 20) -> int:
+    """Histograms of p(chosen) and p(unchosen) at the stop per prompt, same layout as paper_histograms."""
+    out.mkdir(parents=True, exist_ok=True)
+    items = sorted(stop.item_id.unique())
+    chunks = [items[i:i + per_page] for i in range(0, len(items), per_page)]
+    info = table.set_index("item_id")
+    edges = np.linspace(0, 1, 51)
+    with plt.rc_context(PAPER_RC):
+        for pi, chunk in enumerate(chunks, 1):
+            fig, axes = plt.subplots(5, 4, figsize=(7.2, 9.0), sharex=True, sharey=True)
+            for ax, item in zip(axes.ravel(), chunk):
+                g = stop[stop.item_id == item]
+                e = info.loc[item]
+                ax.hist(g.p_unchosen, bins=edges, color=COL["unchosen"], alpha=0.75, linewidth=0)
+                ax.hist(g.p_chosen, bins=edges, color=COL["chosen"], alpha=0.75, linewidth=0)
+                pair, order = item.split(":", 1)[1].rsplit(":", 1)
+                ax.set_title(f"{pair} ({order})   acc. {e.accuracy:.2f}\nmedian {e.p_chosen_median:.3f}, below 0.9 in {(g.p_chosen < 0.9).mean():.0%}",
+                             loc="left", pad=2, fontsize=6.5)
+                for side in ("top", "right"):
+                    ax.spines[side].set_visible(False)
+                ax.tick_params(direction="out")
+                ax.set_xlim(0, 1)
+            for ax in axes.ravel()[len(chunk):]:
+                ax.axis("off")
+            for ax in axes[:, 0]:
+                ax.set_ylabel("traces")
+            for ax in axes[-1, :]:
+                ax.set_xlabel("probability at the stop")
+            handles = [plt.Rectangle((0, 0), 1, 1, color=COL["chosen"], alpha=0.75, label="p(chosen option)"),
+                       plt.Rectangle((0, 0), 1, 1, color=COL["unchosen"], alpha=0.75, label="p(unchosen option)")]
+            fig.legend(handles=handles, loc="upper center", ncol=2, frameon=False, bbox_to_anchor=(0.5, 0.995))
+            fig.text(0.99, 0.004, f"{cond} condition, page {pi} of {len(chunks)}; bins of 0.02; the two probabilities sum to one", fontsize=6, color=MUTED, ha="right", va="bottom")
+            fig.tight_layout(rect=(0, 0.012, 1, 0.975))
+            for ext in ("pdf", "png"):
+                fig.savefig(out / f"prob_hist_{cond}_p{pi}.{ext}")
+            plt.close(fig)
+    return len(chunks)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--run", type=Path, required=True)
@@ -377,7 +416,8 @@ def main() -> None:
     histograms(stop, table, out, args.cond)
     if args.paper_dir:
         n_paper = paper_histograms(stop, table, args.paper_dir, args.cond)
-        print(f"paper-style histograms: {n_paper} pages -> {args.paper_dir}/stop_hist_{args.cond}_{REF}_p1..{n_paper}.pdf/.png")
+        paper_prob_histograms(stop, table, args.paper_dir, args.cond)
+        print(f"paper-style histograms: {n_paper} pages -> {args.paper_dir}/stop_hist_{args.cond}_{REF}_p1..{n_paper}.pdf/.png and prob_hist_{args.cond}_p1..{n_paper}.pdf/.png")
 
     print(f"{res['traces']} {args.cond} traces with raw logits, {res['prompts']} prompts")
     pc = res["p_chosen_at_stop"]
