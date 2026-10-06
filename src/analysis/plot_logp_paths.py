@@ -137,7 +137,8 @@ def overview(D: Data, out: Path, cond: str, value: str) -> None:
         if D.ylim:
             ax.set_ylim(*D.ylim)
         style(ax)
-    fig.suptitle(f"{cond}: {D.ylabel} of the option the model ends up choosing and of the other one", x=0.01, ha="left", fontsize=11, color=INK)
+    what = D.ylabel if value == "logp_think" else f"{D.ylabel} of the option the model ends up choosing and of the other one"
+    fig.suptitle(f"{cond}: {what}", x=0.01, ha="left", fontsize=11, color=INK)
     fig.tight_layout(rect=(0, 0, 1, 0.95))
     fig.savefig(out / f"fig_{value}_chosen_unchosen_{cond}.png", dpi=150)
     plt.close(fig)
@@ -180,7 +181,8 @@ def per_prompt(D: Data, out: Path, cond: str, value: str, n_traces: int, per_pag
         handles = [plt.Line2D([], [], color=COL[k], ls=STYLE[k], lw=2.2, label=f"{NAME[k]}, median of the prompt's traces") for k in D.series]
         handles += [plt.Line2D([], [], color=MUTED, lw=0.7, label=f"single traces ({n_traces} per prompt)")]
         fig.legend(handles=handles, loc="upper right", ncol=4, fontsize=8, frameon=False)
-        fig.suptitle(f"{cond}: {D.ylabel} of the chosen and the unchosen option (page {pi} of {len(pages)})", x=0.01, ha="left", fontsize=10, color=INK)
+        what = D.ylabel if value == "logp_think" else f"{D.ylabel} of the chosen and the unchosen option"
+        fig.suptitle(f"{cond}: {what} (page {pi} of {len(pages)})", x=0.01, ha="left", fontsize=10, color=INK)
         fig.tight_layout(rect=(0, 0, 1, 0.97))
         fig.savefig(out / f"{value}_by_prompt_{cond}_p{pi}.png", dpi=110)
         plt.close(fig)
