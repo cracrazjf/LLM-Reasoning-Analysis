@@ -15,7 +15,7 @@ starting with whitespace; the position is the next sentence's first non-blank to
   open    prompt + thinking so far, nothing appended: the model's own next token. z_think and
           logp_think for </think> (would it stop here?), plus z_A, z_B.
 Both contexts also record, over the whole vocabulary, the mean, standard deviation and
-log-sum-exp of the logits: one number each. A logit has no fixed zero; the log-sum-exp turns it
+log-sum-exp of the logits (vocab_mean, vocab_sd, vocab_lse): one number each. A logit has no fixed zero; the log-sum-exp turns it
 into a probability (logp = z - lse) and the mean pins the zero at every position. The open context
 keeps its top candidates (--top, default 5: token ids and logits), the words the model would
 write next. The full-vocabulary values come from a logits processor that reads every row before
@@ -45,7 +45,7 @@ from pathlib import Path
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).parent))
-from generate import ANSWER_TOP_LOGPROBS, MODEL, Tokens, chat_ids, load_llm, load_selection  # noqa: E402
+from generate import ANSWER_TOP_LOGPROBS, MODEL, Tokens, chat_ids, load_llm, load_selection, vocab_stats_processor  # noqa: E402
 
 SENTENCE_END = re.compile(r"[.!?][\"')\]]*\s*$")
 CLOSE = "\n</think>\n\n"
@@ -85,57 +85,6 @@ def done_ids(out: Path) -> set[str]:
             except (json.JSONDecodeError, KeyError):
                 pass
     return done
-
-
-def vocab_stats_processor(watch_ids: list[int]):
-    """A vLLM logits processor that records, for every tagged request, the full-vocabulary mean, SD and
-    log-sum-exp of the logits and the logits of the watched token ids. It runs inside the engine, so the
-    engine must run in this process (VLLM_ENABLE_V1_MULTIPROCESSING=0); results are read from
-    VocabStats.instance.out, keyed by the tag in SamplingParams.extra_args."""
-    import torch
-    from vllm.v1.sample.logits_processor import BatchUpdate, LogitsProcessor, MoveDirectionality
-
-    class VocabStats(LogitsProcessor):
-        instance = None
-
-        def __init__(self, vllm_config, device, is_pin_memory) -> None:
-            self.rows: dict[int, str] = {}      # batch row -> tag
-            self.out: dict[str, dict[str, Any]] = {}
-            self.ids = torch.tensor(watch_ids, device=device)
-            VocabStats.instance = self
-
-        def is_argmax_invariant(self) -> bool:
-            return True
-
-        def update_state(self, batch_update: BatchUpdate | None) -> None:
-            if batch_update is None:
-                return
-            for index in batch_update.removed:
-                self.rows.pop(index, None)
-            for a, b, direction in batch_update.moved:
-                ra, rb = self.rows.pop(a, None), self.rows.pop(b, None)
-                if ra is not None:
-                    self.rows[b] = ra
-                if direction == MoveDirectionality.SWAP and rb is not None:
-                    self.rows[a] = rb
-            for index, params, _prompt, _output in batch_update.added:
-                tag = (getattr(params, "extra_args", None) or {}).get("tag")
-                if tag is None:
-                    self.rows.pop(index, None)
-                else:
-                    self.rows[index] = tag
-
-        def apply(self, logits):
-            if self.rows:
-                idx = sorted(self.rows)
-                sub = logits[torch.tensor(idx, device=logits.device)].float()
-                mean, sd, lse = sub.mean(1).tolist(), sub.std(1).tolist(), torch.logsumexp(sub, 1).tolist()
-                picked = sub[:, self.ids].tolist()
-                for j, i in enumerate(idx):
-                    self.out[self.rows[i]] = {"mean": mean[j], "sd": sd[j], "lse": lse[j], "watch": picked[j]}
-            return logits
-
-    return VocabStats
 
 
 def main() -> None:
@@ -193,12 +142,12 @@ def main() -> None:
         s = stats.out.pop(rid, None) if stats_on else None
         if s is not None:
             lse, z = s["lse"], dict(zip(watch, s["watch"]))
-            rec = {"mean": s["mean"], "sd": s["sd"], "lse": lse}
+            rec = {"vocab_mean": s["mean"], "vocab_sd": s["sd"], "vocab_lse": lse}
         else:
             m = max(top.values())
             lse = m + math.log(sum(math.exp(v - m) for v in top.values()))
             z = {t: top.get(t) for t in watch}
-            rec = {"mean": None, "sd": None, "lse": lse}
+            rec = {"vocab_mean": None, "vocab_sd": None, "vocab_lse": lse}
         for name, t in (("A", tokens.options["A"]), ("B", tokens.options["B"]), ("think", tokens.think_end)):
             rec[f"z_{name}"] = z[t]
             rec[f"logp_{name}"] = None if z[t] is None else z[t] - lse
