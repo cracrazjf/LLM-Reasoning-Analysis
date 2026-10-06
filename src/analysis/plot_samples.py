@@ -6,8 +6,8 @@
 Uses <run>/analysis/paths.npz (src/paths.py). For every listed prompt (pair id and order) the
 first --per-prompt traces are drawn, alternating correct and wrong answers where both exist. In a
 panel: raw logit of the chosen option (the letter answered after </think>) and of the unchosen one
-against thinking tokens; a dot marks a verdict sentence (one that states an answer letter) and the
-last point is the stop. Writes <out>/samples_<cond>.pdf and .png.
+against thinking tokens; a dot marks a verdict sentence (one that states an answer letter); the
+last point of a curve is the stop. Writes <out>/samples_<cond>.pdf and .png.
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from paths import Paths  # noqa: E402
-from analysis.plot_logp_paths import COL, INK, MUTED  # noqa: E402
+from analysis.plot_logp_paths import COL  # noqa: E402
 from analysis.stop_line import PAPER_RC  # noqa: E402
 
 
@@ -68,7 +68,6 @@ def main() -> None:
             ax.plot(x, c, color=COL["chosen"], lw=1.0, label="chosen option")
             v = V[s] > 0
             ax.plot(x[v], c[v], "o", ms=2.6, color=COL["chosen"], mec="white", mew=0.4, label="verdict sentence")
-            ax.plot(x[-1], c[-1], "s", ms=4, color=INK, label="stop")
             pair, order = item.rsplit(":", 1)
             ok = "correct" if P.T.correct.values[i] else "wrong"
             k = P.T.sample_id.values[i].rsplit("#", 1)[1]
@@ -83,7 +82,7 @@ def main() -> None:
         for ax in axes[-1, :]:
             ax.set_xlabel("thinking tokens")
         h, l = axes[0, 0].get_legend_handles_labels()
-        fig.legend(h, l, loc="upper center", ncol=4, frameon=False, bbox_to_anchor=(0.5, 0.995))
+        fig.legend(h, l, loc="upper center", ncol=3, frameon=False, bbox_to_anchor=(0.5, 0.995))
         fig.tight_layout(rect=(0, 0, 1, 0.97))
         for ext in ("pdf", "png"):
             fig.savefig(args.out / f"{args.name}_{args.cond}.{ext}")
