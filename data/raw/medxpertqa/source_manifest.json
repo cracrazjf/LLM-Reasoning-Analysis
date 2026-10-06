@@ -1,0 +1,19 @@
+{
+ "repo": "TsinghuaC3I/MedXpertQA",
+ "revision": "7e7c465a68eb2b866926bfa59c8c9d17a8daba65",
+ "license": "MIT (dataset card)",
+ "fetched_at": "2026-10-01T01:41:52+00:00",
+ "citation": "Zuo et al. (2025). MedXpertQA: Benchmarking Expert-Level Medical Reasoning and Understanding. ICML. arXiv:2501.18362",
+ "files": {
+  "Text/test.jsonl": {
+   "sha256": "07ea977f7e326909b51c883b65f6ad7f399fc6db07408ef3630f4e3048ec71b2",
+   "bytes": 4163223,
+   "url": "https://huggingface.co/datasets/TsinghuaC3I/MedXpertQA/resolve/7e7c465a68eb2b866926bfa59c8c9d17a8daba65/Text/test.jsonl"
+  },
+  "Text/dev.jsonl": {
+   "sha256": "1030a180a00ea2762ce9ac2a4fa4d5db4543b7e4aa25b0fdd2ec44149e2242fa",
+   "bytes": 13465,
+   "url": "https://huggingface.co/datasets/TsinghuaC3I/MedXpertQA/resolve/7e7c465a68eb2b866926bfa59c8c9d17a8daba65/Text/dev.jsonl"
+  }
+ }
+}

@@ -1,0 +1,41 @@
+pair_id,source_id,band,body_system,question_type,correct_letter,correct_text,distractor_letter,distractor_text,acc_think_screen,acc_think_screen_ab,acc_think_screen_ba,acc_nothink_screen,gain,think_tokens_screen
+Text-1031:E-C,Text-1031,hurts,Nervous,Reasoning,E,Brain abscess,C,Subdural hematoma,0.1875,0.125,0.25,1.0,-0.8125,1734.25
+Text-1218:C-A,Text-1218,hurts,Skeletal,Reasoning,C,Left inferior innominate shear,A,Left innominate inflare,0.625,0.5,0.75,1.0,-0.375,1413.5
+Text-1218:C-B,Text-1218,hurts,Skeletal,Reasoning,C,Left inferior innominate shear,B,Right innominate outflare,0.4375,0.125,0.75,0.7,-0.2624999999999999,1333.0
+Text-1338:A-J,Text-1338,hurts,Respiratory,Reasoning,A,Small cell lung cancer,J,Squamous cell carcinoma,0.625,0.75,0.5,1.0,-0.375,1407.5
+Text-1363:E-F,Text-1363,hurts,Cardiovascular,Reasoning,E,Aortic valve regurgitation,F,Hypertrophic cardiomyopathy,0.5625,0.625,0.5,1.0,-0.4375,3559.5
+Text-1363:E-J,Text-1363,hurts,Cardiovascular,Reasoning,E,Aortic valve regurgitation,J,Pulmonary valve stenosis,0.375,0.375,0.375,1.0,-0.625,3001.5
+Text-1426:A-E,Text-1426,hurts,Muscular,Reasoning,A,quadrigia syndrome,E,swan neck deformity,0.375,0.0,0.75,1.0,-0.625,2038.25
+Text-1495:J-I,Text-1495,hurts,Nervous,Reasoning,J,CHARGE association,I,Alagille syndrome,0.625,0.75,0.5,1.0,-0.375,1403.5
+Text-1553:J-A,Text-1553,hurts,Skeletal,Reasoning,J,left sacral rotation around a right oblique axis,A,right sacral torsion on a right oblique axis,0.6875,0.625,0.75,1.0,-0.3125,1471.5
+Text-1553:J-C,Text-1553,hurts,Skeletal,Reasoning,J,left sacral rotation around a right oblique axis,C,right sacral rotation around a right oblique axis,0.375,0.25,0.5,1.0,-0.625,1310.5
+Text-1565:G-I,Text-1565,hurts,Digestive,Reasoning,G,Appendicitis,I,Pyelonephritis,0.625,0.625,0.625,1.0,-0.375,1779.0
+Text-1603:B-A,Text-1603,hurts,Respiratory,Reasoning,B,Rupture of an emphysematous bleb,A,Acute right heart failure,0.1875,0.0,0.375,1.0,-0.8125,1948.25
+Text-1783:F-H,Text-1783,hurts,Digestive,Reasoning,F,Hepatitis D virus infection,H,Nonalcoholic steatohepatitis,0.625,0.625,0.625,1.0,-0.375,2940.75
+Text-1863:B-C,Text-1863,hurts,Digestive,Reasoning,B,Wilms tumor,C,Hepatoblastoma,0.0,0.0,0.0,0.85,-0.85,1063.75
+Text-1934:E-G,Text-1934,hurts,Skeletal,Reasoning,E,The sacrum is a forward torsion,G,L1–L5 follow Fryette's 1st law exclusively,0.5,0.25,0.75,1.0,-0.5,1882.5
+Text-200:J-C,Text-200,hurts,Skeletal,Reasoning,J,"T9 flexed, rotated right, sidebent right",C,"T9 neutral, rotated right, sidebent right",0.0625,0.0,0.125,0.8333333333333334,-0.7708333333333334,2193.0
+Text-2010:G-I,Text-2010,hurts,Muscular,Reasoning,G,Anteriorly rotated clavicle,I,Posteriorly rotated clavicle,0.25,0.5,0.0,1.0,-0.75,1341.25
+Text-2072:D-I,Text-2072,hurts,Digestive,Reasoning,D,Irritable bowel syndrome,I,Microscopic colitis,0.75,0.75,0.75,0.9833333333333332,-0.2333333333333332,1314.5
+Text-2108:H-E,Text-2108,hurts,Nervous,Reasoning,H,Lateral strain,E,Inferior vertical strain,0.75,0.75,0.75,1.0,-0.25,736.0
+Text-2179:B-A,Text-2179,hurts,Endocrine,Understanding,B,Secondary pure red cell aplasia,A,Thymoma-associated myelodysplasia,0.375,0.25,0.5,1.0,-0.625,2606.25
+Text-2179:B-C,Text-2179,hurts,Endocrine,Understanding,B,Secondary pure red cell aplasia,C,Autoimmune pure red cell aplasia,0.6875,0.625,0.75,1.0,-0.3125,2601.5
+Text-2179:B-E,Text-2179,hurts,Endocrine,Understanding,B,Secondary pure red cell aplasia,E,Paraneoplastic erythroid hypoplasia,0.0,0.0,0.0,0.5833333333333334,-0.5833333333333334,1466.5
+Text-2179:B-J,Text-2179,hurts,Endocrine,Understanding,B,Secondary pure red cell aplasia,J,Chronic erythroid maturation arrest,0.5625,0.5,0.625,1.0,-0.4375,2750.5
+Text-21:E-D,Text-21,hurts,Endocrine,Reasoning,E,Leukemoid reaction,D,Primary myelofibrosis,0.5,0.625,0.375,1.0,-0.5,1750.5
+Text-2328:A-I,Text-2328,hurts,Skeletal,Reasoning,A,Lumbosacral strain,I,Vertebral compression fracture,0.3125,0.125,0.5,0.8166666666666667,-0.5041666666666667,1121.75
+Text-2367:I-F,Text-2367,hurts,Reproductive,Understanding,I,5α-reductase deficiency,F,Androgen insensitivity syndrome,0.6875,0.625,0.75,1.0,-0.3125,1938.0
+Text-282:J-B,Text-282,hurts,Muscular,Reasoning,J,Left unilateral sacral flexion about the middle transverse axis,B,Left-on-left sacral torsion,0.375,0.125,0.625,0.7166666666666667,-0.3416666666666667,1320.75
+Text-282:J-I,Text-282,hurts,Muscular,Reasoning,J,Left unilateral sacral flexion about the middle transverse axis,I,Right-on-left sacral torsion,0.3125,0.125,0.5,0.7,-0.3874999999999999,1480.25
+Text-303:E-I,Text-303,hurts,Cardiovascular,Reasoning,E,Hypertensive emergency,I,Chronic kidney disease with hypertensive urgency,0.375,0.25,0.5,1.0,-0.625,1195.0
+Text-330:G-I,Text-330,hurts,Nervous,Reasoning,G,Anorexia nervosa,I,Other specified feeding or eating disorder,0.125,0.25,0.0,0.7,-0.575,1746.75
+Text-438:A-B,Text-438,hurts,Skeletal,Reasoning,A,Pronation ankle sprain,B,Posterior fibular head somatic dysfunction,0.0625,0.0,0.125,0.7555555555555555,-0.6930555555555555,1095.5
+Text-438:A-E,Text-438,hurts,Skeletal,Reasoning,A,Pronation ankle sprain,E,Anterior fibular head somatic dysfunction,0.3125,0.25,0.375,1.0,-0.6875,1441.5
+Text-438:A-H,Text-438,hurts,Skeletal,Reasoning,A,Pronation ankle sprain,H,Supination ankle sprain,0.375,0.75,0.0,0.7272727272727273,-0.3522727272727273,1630.25
+Text-540:A-E,Text-540,hurts,Muscular,Reasoning,A,Abduction of the ulna,E,Supination of the radius,0.625,0.625,0.625,0.95,-0.3249999999999999,1387.75
+Text-555:I-B,Text-555,hurts,Skeletal,Reasoning,I,Anterior fibular head dysfunction,B,Medial tibial torsion,0.5,0.5,0.5,1.0,-0.5,1119.25
+Text-555:I-H,Text-555,hurts,Skeletal,Reasoning,I,Anterior fibular head dysfunction,H,Lateral tibial torsion,0.5,0.5,0.5,1.0,-0.5,863.25
+Text-629:J-B,Text-629,hurts,Reproductive,Reasoning,J,Circular anechoic structures within the myometrium without posterior shadowing,B,A focal hypoechoic lesion with irregular borders in the endometrium,0.375,0.625,0.125,0.6833333333333333,-0.3083333333333333,2508.75
+Text-629:J-I,Text-629,hurts,Reproductive,Reasoning,J,Circular anechoic structures within the myometrium without posterior shadowing,I,"Symmetrical, homogeneous myometrial thickening",0.0,0.0,0.0,0.9666666666666668,-0.9666666666666668,1454.5
+Text-779:D-G,Text-779,hurts,Skeletal,Reasoning,D,Right unilateral sacral extension,G,Left on left sacral torsion,0.3125,0.125,0.5,1.0,-0.6875,1703.25
+Text-928:G-C,Text-928,hurts,Muscular,Reasoning,G,C4–C6 ERRSR,C,C4–C6 NSRRR,0.75,0.75,0.75,0.9833333333333332,-0.2333333333333332,1489.0
