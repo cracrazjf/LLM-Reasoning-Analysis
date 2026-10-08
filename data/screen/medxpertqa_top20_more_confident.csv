@@ -1,0 +1,21 @@
+pair_id,order,source_id,correct_text,distractor_text,nothink_gap,think_gap_median,change,share_gap_up,share_gap_down,share_correct,think_tokens_median
+Text-1788:C-J,ab,Text-1788,Microscopic polyangiitis,Eosinophilic granulomatosis with polyangiitis,7.250000132829882,23.75,16.499999867170118,1.0,0.0,1.0,586.5
+Text-460:A-F,ab,Text-460,Parvovirus B19,Transient synovitis,2.7499999962747097,18.75,16.00000000372529,1.0,0.0,1.0,529.5
+Text-959:E-H,ab,Text-959,Cyclothymic disorder,Adjustment disorder with depressed mood,1.7499999850988388,17.375,15.625000014901161,1.0,0.0,1.0,730.5
+Text-1427:J-A,ab,Text-1427,Situational syncope,Vasovagal syncope,5.749999928288162,21.25,15.500000071711838,1.0,0.0,1.0,704.0
+Text-2449:C-A,ab,Text-2449,Parvovirus,Fibromyalgia,0.25,15.749999880790718,15.499999880790718,1.0,0.0,1.0,515.0
+Text-409:A-J,ab,Text-409,Extension,Protraction,2.2500000298023224,17.0,14.749999970197678,1.0,0.0,1.0,696.5
+Text-1481:I-D,ab,Text-1481,Giant-cell arteritis,Polymyalgia rheumatica,2.7499999962747097,17.375,14.62500000372529,1.0,0.0,1.0,660.0
+Text-1976:A-J,ab,Text-1976,Von Willebrand disease,Bernard-Soulier syndrome,4.250000044703484,18.875,14.624999955296516,1.0,0.0,1.0,569.0
+Text-1991:I-G,ab,Text-1991,Cavernous hemangioma,Simple hepatic cyst,6.000000086612999,20.5,14.499999913387,1.0,0.0,1.0,522.5
+Text-1495:J-D,ab,Text-1495,CHARGE association,Kallman syndrome,10.50000011958764,25.0,14.49999988041236,1.0,0.0,1.0,454.0
+Text-1495:J-G,ab,Text-1495,CHARGE association,Waardenburg syndrome,2.7499999962747097,17.0,14.25000000372529,1.0,0.0,1.0,494.5
+Text-1991:I-A,ab,Text-1991,Cavernous hemangioma,Hepatic abscess,8.499999663079507,22.625,14.125000336920493,1.0,0.0,1.0,530.0
+Text-699:I-C,ab,Text-699,left unilateral sacral extension,piriformis syndrome,8.749999893334461,22.75,14.000000106665539,1.0,0.0,1.0,526.5
+Text-1976:A-H,ab,Text-1976,Von Willebrand disease,Antiphospholipid syndrome,3.4999999310821295,17.5,14.00000006891787,1.0,0.0,1.0,683.0
+Text-2367:I-C,ab,Text-2367,5α-reductase deficiency,Aromatase deficiency,3.4999999310821295,17.5,14.00000006891787,1.0,0.0,1.0,1544.5
+Text-409:A-C,ab,Text-409,Extension,Retraction,1.25,15.24999976158145,13.99999976158145,1.0,0.0,1.0,766.5
+Text-409:A-I,ab,Text-409,Extension,Sidebending,0.25,14.00000011920963,13.75000011920963,1.0,0.0,1.0,1104.5
+Text-1427:J-H,ab,Text-1427,Situational syncope,Postural hypotension,3.2499999403953552,16.75,13.500000059604645,1.0,0.0,1.0,700.5
+Text-696:B-C,ab,Text-696,Dependent,Obsessive-compulsive,5.499999983236194,19.0,13.500000016763806,1.0,0.0,1.0,678.5
+Text-779:D-C,ab,Text-779,Right unilateral sacral extension,Left unilateral sacral extension,4.500000096857548,18.0,13.499999903142452,0.9666666666666668,0.0333333333333333,0.9666666666666668,698.0

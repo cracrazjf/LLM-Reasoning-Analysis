@@ -1,0 +1,21 @@
+pair_id,order,source_id,correct_text,distractor_text,nothink_gap,think_gap_median,change,share_gap_up,share_gap_down,share_correct,think_tokens_median
+Text-31:D-H,ba,Text-31,Superior vertical strain,Posterior cranial base strain,-7.749999973515514,-23.25,-15.500000026484486,0.0,1.0,0.0,396.0
+Text-1548:G-H,ba,Text-1548,Cervical radiculopathy,Ulnar nerve entrapment at the elbow,-4.7500000186264515,-19.0,-14.249999981373549,0.0,1.0,0.0,526.5
+Text-1548:G-I,ba,Text-1548,Cervical radiculopathy,Cubital tunnel syndrome,-6.250000192085281,-19.5,-13.249999807914719,0.0,1.0,0.0,727.5
+Text-2410:D-F,ba,Text-2410,Left on left sacral torsion,Right on right sacral torsion,-1.5000000596046448,-14.624999582767572,-13.124999523162927,0.0666666666666666,0.9333333333333332,0.0666666666666666,699.0
+Text-2108:H-D,ba,Text-2108,Lateral strain,Torsion strain,-8.999999649982783,-21.75,-12.750000350017217,0.0,1.0,0.0,457.0
+Text-1928:A-J,ba,Text-1928,Anterior thoracic 11 tender point,Psoas syndrome,-0.5,-12.999999642374632,-12.499999642374632,0.0,1.0,0.0,940.5
+Text-1593:C-F,ba,Text-1593,Left rotation on a right oblique axis,Right rotation on a left oblique axis,-1.7499999850988388,-14.00000011920963,-12.250000134110792,0.0,1.0,0.0,1333.0
+Text-1928:A-E,ba,Text-1928,Anterior thoracic 11 tender point,Iliacus tender point,-2.7499999962747097,-14.99999970197682,-12.24999970570211,0.0,1.0,0.0,790.0
+Text-1863:B-C,ba,Text-1863,Wilms tumor,Hepatoblastoma,1.25,-10.999999523302904,-12.249999523302904,0.0,0.9666666666666668,0.0,785.0
+Text-2410:D-H,ba,Text-2410,Left on left sacral torsion,Left on right sacral torsion,-1.5000000596046448,-13.499999523163863,-11.999999463559218,0.0666666666666666,0.9333333333333332,0.0666666666666666,1040.0
+Text-147:D-F,ba,Text-147,Central precocious puberty related to a central nervous system lesion,Idiopathic central precocious puberty,-8.250000034138793,-20.125,-11.874999965861207,0.0,1.0,0.0,597.0
+Text-699:I-H,ba,Text-699,left unilateral sacral extension,left sacral torsion,-2.7499999962747097,-14.624999582767572,-11.874999586492862,0.0,1.0,0.0,677.0
+Text-1239:F-G,ba,Text-1239,NSRRL,RSRRL,-2.2500000298023224,-14.00000011920963,-11.750000089407308,0.1333333333333333,0.8666666666666667,0.1333333333333333,1033.5
+Text-1495:J-E,ba,Text-1495,CHARGE association,DiGeorge syndrome,-10.50000011958764,-22.125,-11.62499988041236,0.0,1.0,0.0,548.0
+Text-2410:D-F,ab,Text-2410,Left on left sacral torsion,Right on right sacral torsion,-1.5000000596046448,-13.124999880792757,-11.624999821188112,0.0,1.0,0.0,529.0
+Text-1999:G-D,ba,Text-1999,left-on-left sacral torsion,right-on-left sacral torsion,-4.250000044703484,-15.874999821186083,-11.6249997764826,0.0333333333333333,0.9666666666666668,0.0333333333333333,694.0
+Text-2035:I-J,ba,Text-2035,C2 ERLSL,AA RR,-0.9999999701976776,-12.50000011921611,-11.500000149018433,0.0,1.0,0.0,1016.5
+Text-1928:A-I,ba,Text-1928,Anterior thoracic 11 tender point,Rectus abdominis strain,-14.00000011920963,-25.375,-11.37499988079037,0.0,1.0,0.0,469.0
+Text-1928:A-G,ba,Text-1928,Anterior thoracic 11 tender point,Pubic symphysis dysfunction,-1.25,-12.37500005961374,-11.12500005961374,0.0,1.0,0.0,916.0
+Text-1367:J-B,ba,Text-1367,Left unilateral extension about the middle transverse axis,Right torsion about an oblique axis,-0.25,-11.250000357712452,-11.000000357712452,0.2666666666666666,0.7333333333333333,0.2666666666666666,711.0

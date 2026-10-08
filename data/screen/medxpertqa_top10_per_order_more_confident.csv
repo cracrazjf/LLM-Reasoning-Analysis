@@ -1,0 +1,21 @@
+pair_id,order,source_id,correct_text,distractor_text,nothink_gap,think_gap_median,change,share_gap_up,share_gap_down,share_correct,think_tokens_median
+Text-1788:C-J,ab,Text-1788,Microscopic polyangiitis,Eosinophilic granulomatosis with polyangiitis,7.250000132829882,23.75,16.499999867170118,1.0,0.0,1.0,586.5
+Text-460:A-F,ab,Text-460,Parvovirus B19,Transient synovitis,2.7499999962747097,18.75,16.00000000372529,1.0,0.0,1.0,529.5
+Text-959:E-H,ab,Text-959,Cyclothymic disorder,Adjustment disorder with depressed mood,1.7499999850988388,17.375,15.625000014901161,1.0,0.0,1.0,730.5
+Text-1427:J-A,ab,Text-1427,Situational syncope,Vasovagal syncope,5.749999928288162,21.25,15.500000071711838,1.0,0.0,1.0,704.0
+Text-2449:C-A,ab,Text-2449,Parvovirus,Fibromyalgia,0.25,15.749999880790718,15.499999880790718,1.0,0.0,1.0,515.0
+Text-409:A-J,ab,Text-409,Extension,Protraction,2.2500000298023224,17.0,14.749999970197678,1.0,0.0,1.0,696.5
+Text-1481:I-D,ab,Text-1481,Giant-cell arteritis,Polymyalgia rheumatica,2.7499999962747097,17.375,14.62500000372529,1.0,0.0,1.0,660.0
+Text-1976:A-J,ab,Text-1976,Von Willebrand disease,Bernard-Soulier syndrome,4.250000044703484,18.875,14.624999955296516,1.0,0.0,1.0,569.0
+Text-1991:I-G,ab,Text-1991,Cavernous hemangioma,Simple hepatic cyst,6.000000086612999,20.5,14.499999913387,1.0,0.0,1.0,522.5
+Text-1495:J-D,ab,Text-1495,CHARGE association,Kallman syndrome,10.50000011958764,25.0,14.49999988041236,1.0,0.0,1.0,454.0
+Text-696:B-D,ba,Text-696,Dependent,Narcissistic,0.9999999701976776,12.250000000011369,11.250000029813691,1.0,0.0,1.0,691.0
+Text-1427:J-I,ba,Text-1427,Situational syncope,Vertebrobasilar insufficiency,2.9999999925494194,13.624999701977572,10.624999709428153,1.0,0.0,1.0,749.5
+Text-460:A-F,ba,Text-460,Parvovirus B19,Transient synovitis,1.25,11.625000059645572,10.375000059645572,1.0,0.0,1.0,490.0
+Text-1241:I-C,ba,Text-1241,Chronic myelogenous leukemia,Chronic lymphocytic leukemia,1.5000000596046448,11.874999642397142,10.374999582792498,1.0,0.0,1.0,1439.5
+Text-1427:J-F,ba,Text-1427,Situational syncope,Carotid sinus hypersensitivity,3.749999888241291,14.00000011920963,10.25000023096834,1.0,0.0,1.0,705.0
+Text-21:E-H,ba,Text-21,Leukemoid reaction,Acute myeloid leukemia,0.7499999701976776,10.87499952334838,10.124999553150703,0.9666666666666668,0.0333333333333333,0.9666666666666668,882.0
+Text-31:D-F,ba,Text-31,Superior vertical strain,Sidebending rotation,4.500000096857548,14.624999582767572,10.124999485910024,1.0,0.0,1.0,457.5
+Text-1495:J-G,ba,Text-1495,CHARGE association,Waardenburg syndrome,1.5000000596046448,11.250000357712452,9.750000298107807,1.0,0.0,1.0,510.5
+Text-409:A-I,ba,Text-409,Extension,Sidebending,2.0000000447034836,11.749999761612344,9.74999971690886,1.0,0.0,1.0,675.5
+Text-1427:J-A,ba,Text-1427,Situational syncope,Vasovagal syncope,3.4999999310821295,13.124999880792757,9.624999949710627,1.0,0.0,1.0,775.5

@@ -1,37 +1,37 @@
-"""Sentence readouts of the stored traces: after every sentence of its thinking, what would the model
-answer, and would it stop?
+"""Sentence readouts of the stored thinking traces: after every sentence of its thinking, what would
+the model answer, and would it stop?
 
-    python src/readout.py --run runs/medxpertqa/hurts-qwen3-8b --selection data/selections/medxpertqa_hurts.json
+    python src/readout.py --run runs/medxpertqa/main-qwen3-8b-ab
 
 Nothing is sampled: every readout is a forward pass over stored token ids, so it describes exactly
-the traces of the run and can be redone or extended at any time.
+the traces of the run and can be redone or extended at any time. Prompts are rebuilt from
+data/tasks/medxpertqa.jsonl the way src/generate.py built them (thinking mode).
 
 Positions (p = number of generated tokens kept): every sentence start inside the thinking (a
 sentence ends at a token that contains a line break, or that ends in . ! ? with the next token
 starting with whitespace; the position is the next sentence's first non-blank token), the stop
 (where the model itself wrote </think>) and the answer position (after the model's own
-"</think>\n\n", kind "a": nothing is appended there in either context, so its two blocks agree).
+"</think>\\n\\n", kind "a": nothing is appended there in either context, so its two blocks agree).
 Each position is read in two contexts:
   closed  prompt + thinking so far + "\\n</think>\\n\\n", the way the model closes its thinking:
           the forced answer. z_A, z_B (raw logits), logp_A, logp_B.
   open    prompt + thinking so far, nothing appended: the model's own next token. z_think and
-          logp_think for </think> (would it stop here?), plus z_A, z_B.
-Both contexts also record, over the whole vocabulary, the mean, standard deviation and
-log-sum-exp of the logits (vocab_mean, vocab_sd, vocab_lse): one number each. A logit has no fixed zero; the log-sum-exp turns it
-into a probability (logp = z - lse) and the mean pins the zero at every position. The open context
-keeps its top candidates (--top, default 5: token ids and logits), the words the model would
-write next. The full-vocabulary values come from a logits processor that reads every row before
-vLLM keeps only the top candidates; with --no-vocab-stats they are skipped, logp is computed from
-the 20 candidates vLLM returns (the two letters hold almost all the probability) and z_think is
-known only when </think> is among them.
+          logp_think for </think> (would it stop here?), plus z_A, z_B, and the top candidates
+          (--top, default 5: token ids and logits), the words the model would write next.
+Both contexts also record, over the whole vocabulary, the mean, standard deviation and log-sum-exp
+of the logits (vocab_mean, vocab_sd, vocab_lse). A logit has no fixed zero; the log-sum-exp turns it
+into a probability (logp = z - lse) and the mean pins the zero at every position. These come from a
+vLLM logits processor that reads every row before vLLM keeps only the top candidates (the engine
+then runs in this process); with --no-vocab-stats they are skipped, logp is computed from the 20
+candidates vLLM returns and z_think is known only when </think> is among them.
 
 Also read once per prompt: the closed context on Qwen3's empty thinking block
 "<think>\\n\\n</think>\\n\\n" (readouts_start.jsonl), the answer before any reasoning.
 
-Output in <run>/readouts/: readouts-NN.jsonl, one line per trace with pos, kind ("s" sentence,
-"e" stop, "a" answer position) and the two blocks "closed" and "open", each a dict of lists aligned with pos. An
-interrupted run resumes from the traces already written; --sample-ids FILE (one sample_id per
-line) restricts the readouts to those traces.
+Output in <run>/readouts/: readouts-NN.jsonl, one line per trace with sample_id, item_id, pos,
+kind ("s" sentence, "e" stop, "a" answer position) and the two blocks "closed" and "open", each a
+dict of lists aligned with pos. An interrupted run resumes from the traces already written;
+--sample-ids FILE (one sample_id per line) restricts the readouts to those traces.
 """
 
 from __future__ import annotations
@@ -46,8 +46,8 @@ import time
 from pathlib import Path
 from typing import Any
 
-sys.path.insert(0, str(Path(__file__).parent))
-from generate import ANSWER_TOP_LOGPROBS, MODEL, MODEL_REVISION, Tokens, chat_ids, load_llm, load_selection, vocab_stats_processor  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from generate import MAX_MODEL_LEN, MODEL, MODEL_REVISION, TOP_LOGPROBS, Tokens, iter_traces, load_tasks  # noqa: E402
 
 SENTENCE_END = re.compile(r"[.!?][\"')\]]*\s*$")
 CLOSE = "\n</think>\n\n"
@@ -92,10 +92,73 @@ def done_ids(out: Path) -> set[str]:
     return done
 
 
+def vocab_stats_processor(watch_ids: list[int]):
+    """A vLLM logits processor that records, for every tagged request, the full-vocabulary mean, SD and
+    log-sum-exp of the logits and the logits of the watched token ids. It runs inside the engine, so the
+    engine must run in this process (VLLM_ENABLE_V1_MULTIPROCESSING=0); results are read from
+    VocabStats.instance.out, keyed by the tag in SamplingParams.extra_args."""
+    import torch
+    from vllm.v1.sample.logits_processor import BatchUpdate, LogitsProcessor, MoveDirectionality
+
+    class VocabStats(LogitsProcessor):
+        instance = None
+
+        def __init__(self, vllm_config, device, is_pin_memory) -> None:
+            self.rows: dict[int, str] = {}      # batch row -> tag
+            self.out: dict[str, dict[str, Any]] = {}
+            self.ids = torch.tensor(watch_ids, device=device)
+            VocabStats.instance = self
+
+        def is_argmax_invariant(self) -> bool:
+            return False   # vLLM runs argmax-invariant processors only for random sampling; the readouts are greedy
+
+        def update_state(self, batch_update: BatchUpdate | None) -> None:
+            if batch_update is None:
+                return
+            # vLLM's own order: added, then removed, then moved
+            for index, params, _prompt, _output in batch_update.added:
+                tag = (getattr(params, "extra_args", None) or {}).get("tag")
+                if tag is None:
+                    self.rows.pop(index, None)
+                else:
+                    self.rows[index] = tag
+            for index in batch_update.removed:
+                self.rows.pop(index, None)
+            for a, b, direction in batch_update.moved:
+                ra, rb = self.rows.pop(a, None), self.rows.pop(b, None)
+                if ra is not None:
+                    self.rows[b] = ra
+                if direction == MoveDirectionality.SWAP and rb is not None:
+                    self.rows[a] = rb
+
+        def apply(self, logits):
+            if self.rows:
+                idx = sorted(self.rows)
+                sub = logits[torch.tensor(idx, device=logits.device)].float()
+                mean, sd, lse = sub.mean(1).tolist(), sub.std(1).tolist(), torch.logsumexp(sub, 1).tolist()
+                picked = sub[:, self.ids].tolist()
+                for j, i in enumerate(idx):
+                    self.out[self.rows[i]] = {"mean": mean[j], "sd": sd[j], "lse": lse[j], "watch": picked[j]}
+            return logits
+
+    return VocabStats
+
+
+def load_readout_llm(max_num_seqs: int, max_num_batched_tokens: int, processor):
+    from huggingface_hub import snapshot_download
+    from vllm import LLM
+
+    model_path = snapshot_download(MODEL, revision=MODEL_REVISION, local_files_only=True)
+    kw = {"logits_processors": [processor]} if processor else {}
+    llm = LLM(model=model_path, dtype="bfloat16", max_model_len=MAX_MODEL_LEN, seed=0, max_num_seqs=max_num_seqs,
+              enable_prefix_caching=True, logprobs_mode="raw_logits", max_logprobs=TOP_LOGPROBS,
+              max_num_batched_tokens=max_num_batched_tokens, **kw)
+    return llm, model_path
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--run", required=True, type=Path, help="run directory with traces-*.jsonl")
-    ap.add_argument("--selection", required=True, type=Path, help="the selection file the run was generated from")
     ap.add_argument("--sample-ids", type=Path, help="read out only the traces listed in this file")
     ap.add_argument("--no-vocab-stats", action="store_true", help="skip the full-vocabulary values (no logits processor)")
     ap.add_argument("--top", type=int, default=5, help="candidates stored for the open context")
@@ -104,31 +167,28 @@ def main() -> None:
                     help="traces being read out at once; their prefixes must fit the KV cache (380k tokens on an A100 80GB)")
     ap.add_argument("--max-num-seqs", type=int, default=1024)
     ap.add_argument("--max-num-batched-tokens", type=int, default=32768)
-    ap.add_argument("--log-every", type=int, default=1000)
+    ap.add_argument("--log-every", type=int, default=200)
     args = ap.parse_args()
     stats_on = not args.no_vocab_stats
     if stats_on:
         os.environ["VLLM_ENABLE_V1_MULTIPROCESSING"] = "0"   # the logits processor must live in this process
 
+    from huggingface_hub import snapshot_download
     from transformers import AutoTokenizer
     from vllm import SamplingParams
     from vllm.sampling_params import RequestOutputKind
 
     out = args.run / "readouts"
     out.mkdir(exist_ok=True)
-    selection = load_selection(args.selection)
     done = done_ids(out)
     only = set(args.sample_ids.read_text(encoding="utf-8").splitlines()) if args.sample_ids else None
 
-    from huggingface_hub import snapshot_download
-
     tok = AutoTokenizer.from_pretrained(snapshot_download(MODEL, revision=MODEL_REVISION, local_files_only=True))
-    tokens = Tokens(tok, tuple(selection["prompts"][0]["options"]))
+    items = {it["item_id"]: it for it in load_tasks()}
+    tokens = Tokens(tok, tuple(next(iter(items.values()))["options"]))
     watch = [tokens.options["A"], tokens.options["B"], tokens.think_end]
     processor = vocab_stats_processor(watch) if stats_on else None
-    llm, _ = load_llm(args.max_num_seqs, max_logprobs=ANSWER_TOP_LOGPROBS, logprobs_mode="raw_logits",
-                      max_num_batched_tokens=args.max_num_batched_tokens,
-                      **({"logits_processors": [processor]} if processor else {}))
+    llm, _ = load_readout_llm(args.max_num_seqs, args.max_num_batched_tokens, processor)
     engine = llm.llm_engine
     stats = processor.instance if processor else None
     if stats_on and stats is None:
@@ -136,11 +196,10 @@ def main() -> None:
     texts = [tok.decode([i]) for i in range(len(tok))]
     close = tok(CLOSE, add_special_tokens=False)["input_ids"]
     empty_think = tok(EMPTY_THINK, add_special_tokens=False)["input_ids"]
-    prompt_ids = {p["prompt_id"]: chat_ids(tok, p["messages"]) for p in selection["prompts"]}
 
     def params(rid: str) -> SamplingParams:
         kw = {"extra_args": {"tag": rid}} if stats_on else {}
-        return SamplingParams(max_tokens=1, temperature=0.0, logprobs=ANSWER_TOP_LOGPROBS, output_kind=RequestOutputKind.FINAL_ONLY, **kw)
+        return SamplingParams(max_tokens=1, temperature=0.0, logprobs=TOP_LOGPROBS, output_kind=RequestOutputKind.FINAL_ONLY, **kw)
 
     def read(rid: str, o: Any, keep_top: bool) -> dict[str, Any]:
         """One readout: the watched logits, their log-probabilities, the vocabulary values and, if asked, the top candidates."""
@@ -177,30 +236,29 @@ def main() -> None:
                     got[o.request_id] = read(o.request_id, o, keep_top=False)
         return got
 
-    start_path = out / "readouts_start.jsonl"
-    if not start_path.exists():
-        got = run({pid: ids + empty_think for pid, ids in prompt_ids.items()})
-        start_path.write_text("".join(json.dumps({"prompt_id": pid, **rounded(got[pid])}) + "\n" for pid in prompt_ids))
-        print(f"start readouts: {len(got)} prompts", flush=True)
-
+    # traces to read, and the prompts they need
     traces = []
-    for f in sorted(args.run.glob("traces-*.jsonl")):
-        for line in f.read_text(encoding="utf-8").splitlines():
-            try:
-                r = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-            if r["sample_id"] in done or r["think_tokens"] is None or (only is not None and r["sample_id"] not in only):
-                continue
-            gen = r["token_ids"]
-            end = gen.index(tokens.think_end)
-            start = gen.index(tokens.think) + 1
-            while start < end and not texts[gen[start]].strip():  # skip the newline after <think>
-                start += 1
-            traces.append({"sample_id": r["sample_id"], "prompt_id": r["prompt_id"], "gen": gen,
-                           "think_start": start, "think_end": end, "pos": positions(gen, start, end, texts, r.get("answer_pos"))})
+    for r in iter_traces(args.run):
+        if r["sample_id"] in done or r["think_tokens"] is None or (only is not None and r["sample_id"] not in only):
+            continue
+        gen = r["token_ids"]
+        end = gen.index(tokens.think_end)
+        start = gen.index(tokens.think) + 1 if tokens.think in gen[:end] else 0
+        while start < end and not texts[gen[start]].strip():  # skip the newline after <think>
+            start += 1
+        traces.append({"sample_id": r["sample_id"], "item_id": r["item_id"], "gen": gen,
+                       "think_start": start, "think_end": end, "pos": positions(gen, start, end, texts, r.get("answer_pos"))})
     if args.limit:
         traces = traces[: args.limit]
+    item_ids = sorted({r["item_id"] for r in iter_traces(args.run, ("item_id",))})
+    prompt_ids = {iid: tokens.chat_ids(items[iid]["messages"], thinking=True) for iid in item_ids}
+
+    start_path = out / "readouts_start.jsonl"
+    if not start_path.exists():
+        got = run({iid: ids + empty_think for iid, ids in prompt_ids.items()})
+        start_path.write_text("".join(json.dumps({"item_id": iid, **rounded(got[iid])}) + "\n" for iid in prompt_ids))
+        print(f"start readouts: {len(got)} prompts", flush=True)
+
     total, n_read = len(traces), sum(2 * len(t["pos"]) for t in traces)
     print(f"{len(done)} traces already read out; {total} to do, {n_read} readouts", flush=True)
 
@@ -211,7 +269,7 @@ def main() -> None:
 
     def request(t: dict[str, Any], p: int, ctx: str) -> None:
         own_close = p > t["think_end"]   # the answer position: the model's own closing tokens are already in the prefix
-        ids = prompt_ids[t["prompt_id"]] + t["gen"][:p] + (close if ctx == "closed" and not own_close else [])
+        ids = prompt_ids[t["item_id"]] + t["gen"][:p] + (close if ctx == "closed" and not own_close else [])
         rid = f"{t['sample_id']}@{p}@{ctx}"
         engine.add_request(rid, {"prompt_token_ids": ids}, params(rid))
 
@@ -240,7 +298,7 @@ def main() -> None:
                     rows = [rounded(t["got"][(q, c)]) for q, _ in t["pos"]]
                     blocks[c] = {k: [r[k] for r in rows] for k in rows[0]}
                 writer.write(json.dumps({
-                    "sample_id": sid, "prompt_id": t["prompt_id"], "think_start": t["think_start"], "think_end": t["think_end"],
+                    "sample_id": sid, "item_id": t["item_id"], "think_start": t["think_start"], "think_end": t["think_end"],
                     "pos": [q for q, _ in t["pos"]], "kind": [k for _, k in t["pos"]], **blocks,
                 }) + "\n")
                 writer.flush()

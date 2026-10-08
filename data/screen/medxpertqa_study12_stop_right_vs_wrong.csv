@@ -1,0 +1,7 @@
+prompt,pair_id,correct_option,accuracy,n_right,n_wrong,diff_median_right,diff_median_wrong,diff_p_mannwhitney,chosen_median_right,chosen_median_wrong,chosen_p_mannwhitney,unchosen_median_right,unchosen_median_wrong
+Text-1582 B,Text-1582:F-E,B,0.6,60,40,5.0,12.0,4.04e-16,42.62,48.0,7.07e-09,37.75,36.0
+Text-699 B,Text-699:I-B,B,0.67,67,33,8.75,12.75,1.78e-11,49.25,52.0,0.00174,40.5,39.0
+Text-1582 A,Text-1582:F-E,A,0.72,72,28,5.5,10.38,1.15e-11,41.75,50.38,1.86e-10,36.25,39.75
+Text-699 A,Text-699:I-B,A,0.79,79,21,9.5,11.75,0.000717,49.0,52.0,0.00113,39.5,40.0
+Text-460 B,Text-460:A-J,B,0.86,86,14,3.0,11.56,0.000609,38.75,43.12,0.00546,35.75,31.62
+Text-1481 A,Text-1481:I-G,A,0.87,87,13,9.5,7.0,5.63e-06,43.75,42.75,0.0627,34.25,35.25

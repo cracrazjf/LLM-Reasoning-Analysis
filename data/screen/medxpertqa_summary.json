@@ -1,0 +1,68 @@
+{
+ "threshold": 0.7,
+ "runs": {
+  "nothink": [
+   "runs/medxpertqa/nothink-qwen3-8b-ab",
+   "runs/medxpertqa/nothink-qwen3-8b-ba"
+  ],
+  "think": [
+   "runs/medxpertqa/think-qwen3-8b-ab",
+   "runs/medxpertqa/think-qwen3-8b-ba"
+  ]
+ },
+ "n_prompts": 1962,
+ "n_pairs": 981,
+ "thinking_samples_per_prompt": {
+  "min": 30,
+  "max": 30
+ },
+ "nothink_answer_source": {
+  "text": 1962
+ },
+ "nothink_correct": {
+  "right": 1221,
+  "wrong": 741
+ },
+ "nothink_accuracy": 0.6223241590214067,
+ "think_accuracy": 0.68212708120965,
+ "letter_biased_pairs": 199,
+ "letter_biased_excluded": true,
+ "prompt_classes": {
+  "helps": 956,
+  "excluded": 398,
+  "hurts": 352,
+  "neutral": 256
+ },
+ "prompt_classes_by_nothink": {
+  "wrong": {
+   "hurts": 328,
+   "neutral": 119,
+   "helps": 95
+  },
+  "right": {
+   "helps": 861,
+   "neutral": 137,
+   "hurts": 24
+  }
+ },
+ "prompt_reasons": {
+  "more confident": 861,
+  "more wrong": 328,
+  "flips to correct": 95,
+  "flips to wrong": 24
+ },
+ "pair_classes": {
+  "helps": 420,
+  "excluded": 199,
+  "mixed": 172,
+  "hurts": 138,
+  "neutral": 52
+ },
+ "pairs_both_orders": {
+  "helps": 420,
+  "hurts": 138,
+  "neutral": 52
+ },
+ "questions_with_a_helps_pair": 101,
+ "questions_with_a_hurts_pair": 63
+}

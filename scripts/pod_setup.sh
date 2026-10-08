@@ -19,7 +19,7 @@ echo "== venv =="
 python3 -m venv /root/venv || { apt-get update -qq && apt-get install -y -qq python3-venv && python3 -m venv /root/venv; }
 source /root/venv/bin/activate
 pip install -q -U pip
-pip install -q "vllm==${VLLM_VERSION}" pandas scipy matplotlib
+pip install -q "vllm==${VLLM_VERSION}" pandas
 CUDA_BUILD=$(python -c "import torch; print(torch.version.cuda or '')")
 echo "torch $(python -c 'import torch; print(torch.__version__)') cuda build ${CUDA_BUILD}"
 if [[ "${CUDA_BUILD}" != 13* ]]; then
