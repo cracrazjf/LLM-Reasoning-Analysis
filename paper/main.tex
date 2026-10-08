@@ -91,8 +91,8 @@ Within a prompt, the stop-point SD is 2.37 for the chosen logit, 1.68 for the di
 \subsection{Errors stop at least as high as correct answers}
 
 \begin{figure}[h]\centering
-\includegraphics[width=\textwidth]{fig16_stop_diff_right_vs_wrong.png}
-\caption{Stop height, $z_{\text{chosen}} - z_{\text{unchosen}}$ at the stop, for traces ending right (blue) and wrong (orange) of the same prompt; the six prompts with at least ten wrong traces. Dashed lines: medians; $p$: Mann--Whitney.}
+\includegraphics[width=\textwidth]{fig14_right_vs_wrong.png}
+\caption{Stop height for traces ending right (blue) and wrong (orange) of the same prompt, the six prompts with at least ten wrong traces. Top row: $z_{\text{chosen}} - z_{\text{unchosen}}$ at the stop; bottom row: the chosen option's raw logit. Dashed lines: medians; $p$: Mann--Whitney.}
 \label{fig:rvw}
 \end{figure}
 
@@ -153,7 +153,7 @@ What fits the data best at the moment: a single relative-evidence variable in wh
 \section{Files}\label{sec:files}
 \begin{itemize}
   \item Generation and readouts: \texttt{src/generate.py}, \texttt{src/readout.py}; classification: \texttt{src/screen.py}; study set: \texttt{src/study\_set.py}.
-  \item Figures: \texttt{src/figures.py} (fig.\ 1, 4, 5), \texttt{src/plot\_logits.py} (fig.\ 8), \texttt{src/plot\_race\_per\_prompt.py} (fig.\ 12), \texttt{src/plot\_right\_vs\_wrong.py} (fig.\ 16); all under \texttt{figures/}.
+  \item Figures: \texttt{src/figures.py} (fig.\ 1, 4, 5), \texttt{src/plot\_logits.py} (fig.\ 8), \texttt{src/plot\_race\_per\_prompt.py} (fig.\ 12), \texttt{src/plot\_right\_vs\_wrong.py} (fig.\ 14); all under \texttt{figures/}.
   \item Tables: \texttt{data/screen/medxpertqa\_prompts.csv}, \texttt{medxpertqa\_pairs.csv}, \texttt{medxpertqa\_study12.csv}, \texttt{medxpertqa\_study12\_stop\_height.csv}, \texttt{medxpertqa\_study12\_stop\_right\_vs\_wrong.csv}.
   \item Traces and readouts (not in git): \texttt{runs/medxpertqa/main-qwen3-8b-ab}, \texttt{-ba}.
 \end{itemize}
