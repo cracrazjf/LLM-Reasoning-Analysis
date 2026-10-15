@@ -5,6 +5,7 @@
     python src/paper_figures.py jump             # fig_jump_vs_length.png: the jump across the conclusion sentence against length, natural and written sentence
     python src/paper_figures.py jumphist         # fig_jump_length_hist.png: histogram over questions of the correlation between length and the jump
     python src/paper_figures.py attention        # fig_attention_shares.png: attention share per token category and per token in category, sorted
+    python src/paper_figures.py ablation_bars    # fig_ablation_bars.png: confidence in the chosen option under the masked-attention conditions
     python src/paper_figures.py fig1             # fig1_answer_attention.png: what the answer-writing position attends to
     python src/paper_figures.py fig2             # fig2_attention_vs_length.png: how that attention spreads as the thinking gets longer
     python src/paper_figures.py fig3             # fig3_jump_vs_attention.png: the conclusion's jump follows the attention it receives
@@ -367,7 +368,7 @@ def fig4() -> None:
                              **{f"per_{c}": (f"per_{c}", "median") for c, *_ in CLASSES}, **{f"n_{c}": (f"per_{c}", "count") for c, *_ in CLASSES}, n=("sample_id", "size")).reset_index()
     med.to_csv(OUT / "fig4_attention_within_trace.csv", index=False)
     with plt.rc_context(STYLE):
-        fig, axes = plt.subplots(1, 3, figsize=(6.8, 2.5))
+        fig, axes = plt.subplots(1, 2, figsize=(6.0, 2.5))
         ax = axes[0]
         body = med[med.t < 1]
         stop = med[med.t == 1]
@@ -388,18 +389,7 @@ def fig4() -> None:
         ax.set_xlabel("proportion of the thinking kept")
         ax.set_ylabel("entropy / log(context length)")
         ax.set_ylim(0.25, 0.5)
-        ax = axes[2]
-        for j, (c, lab, color, ls, mk) in enumerate(CLASSES):
-            d = med[(med.t < 1) & (med[f"n_{c}"] >= 200)]
-            ax.plot(d.t, d[f"per_{c}"], color=color, ls=ls, lw=0.9, label=lab)
-            s1 = stop[stop[f"n_{c}"] >= 200]
-            ax.plot(s1.t + 0.012 * j, s1[f"per_{c}"], marker=mk, ms=3.5, color=color, ls="none", markerfacecolor="white" if mk == "D" else color, markeredgewidth=0.7)
-        ax.set_xlabel("proportion of the thinking kept")
-        ax.set_ylabel("attention share per sentence")
-        ax.set_yscale("log")
-        handles = [Line2D([], [], color=color, ls=ls, lw=0.9, marker=mk, ms=3.5, markerfacecolor="white" if mk == "D" else color, markeredgewidth=0.7) for c, lab, color, ls, mk in CLASSES]
-        ax.legend(handles, [lab for _, lab, *_ in CLASSES], fontsize=5.5, loc="upper right", handlelength=2.6)
-        for ax, letter in zip(axes, "abc"):
+        for ax, letter in zip(axes, "ab"):
             ax.text(-0.3, 1.04, letter, transform=ax.transAxes, fontsize=9, fontweight="bold", va="bottom")
         fig.tight_layout(w_pad=1.2)
         fig.savefig(OUT / "fig4_attention_within_trace.png")
@@ -872,7 +862,35 @@ def attention_shares() -> None:
     print(f"-> {OUT / 'fig_attention_shares.png'}, .csv")
 
 
+# -------------------------------------------------------------------------------------------------------------- ablation bars
+
+def ablation_bars() -> None:
+    """Confidence in the chosen option (log-odds) under the masked-attention conditions; the two controls hatched."""
+    t = pd.read_csv(SCREEN / "medxpertqa_ablation_conclusion.csv")
+    conds = [("y_onset", "end before conclusion sentence", True), ("y_concl_all", "conclusion sentence hidden", False), ("y_concl_answer", "conclusion sentence hidden\nfrom the answer position only", False),
+             ("y_prev_all", "previous sentence hidden", False), ("y_rand_all", "random earlier sentence hidden", False), ("y_base", "full reasoning", True)]
+    summ = pd.DataFrame([{"condition": lab.replace("\n", " "), "median": t[c].median(), "q25": t[c].quantile(0.25), "q75": t[c].quantile(0.75),
+                          "flip_share": float((np.sign(t[c]) != np.sign(t.y_base)).mean()) if c != "y_base" else 0.0, "control": ctl} for c, lab, ctl in conds])
+    summ.to_csv(OUT / "fig_ablation_bars.csv", index=False)
+    with plt.rc_context(STYLE):
+        fig, ax = plt.subplots(figsize=(4.2, 2.6))
+        y = np.arange(len(conds))[::-1]
+        for yi, (c, lab, ctl) in zip(y, conds):
+            ax.barh(yi, t[c].median(), color=LIGHT, edgecolor=BLACK, linewidth=0.6, height=0.65, hatch="////" if ctl else None)
+            ax.errorbar(t[c].median(), yi, xerr=[[t[c].median() - t[c].quantile(0.25)], [t[c].quantile(0.75) - t[c].median()]], fmt="none", ecolor=BLACK, elinewidth=0.6, capsize=2)
+        ax.set_yticks(y); ax.set_yticklabels([lab for _, lab, _ in conds], fontsize=7)
+        ax.tick_params(axis="y", length=0)
+        ax.set_xlabel("confidence in the chosen option (log-odds, nats)")
+        ax.set_xlim(0, 13)
+        fig.tight_layout()
+        fig.savefig(OUT / "fig_ablation_bars.png")
+        plt.close(fig)
+    pd.set_option("display.width", 200)
+    print(summ.round(3).to_string(index=False))
+    print(f"-> {OUT / 'fig_ablation_bars.png'}, .csv")
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "fig1"
     OUT.mkdir(parents=True, exist_ok=True)
-    {"examples": examples, "jump": jump_vs_length, "jumphist": jump_length_hist, "attention": attention_shares, "positions": positions_table, "fig1": fig1, "fig2": fig2, "fig3": fig3, "fig4": fig4, "ablation_table": ablation_table, "fig5": fig5, "fig6": fig6, "fig8": fig8, "fig9": fig9}[cmd]()
+    {"examples": examples, "jump": jump_vs_length, "jumphist": jump_length_hist, "attention": attention_shares, "ablation_bars": ablation_bars, "positions": positions_table, "fig1": fig1, "fig2": fig2, "fig3": fig3, "fig4": fig4, "ablation_table": ablation_table, "fig5": fig5, "fig6": fig6, "fig8": fig8, "fig9": fig9}[cmd]()
