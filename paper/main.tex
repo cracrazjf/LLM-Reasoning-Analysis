@@ -28,7 +28,7 @@ Reasoning language models end their thinking with a conclusion sentence (``There
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.9\textwidth]{confidence_inflation_in_llms/fig0_example_trajectories.png}
-\caption{The closed readout along three reasoning trajectories of one question (Qwen3-8B; MedXpertQA pair Text-699, left unilateral sacral extension versus flexion, correct answer A), chosen at the 10th, 50th and 90th percentile of length among the question's correct traces. At every sentence boundary the thinking is cut, the thinking block is closed, and the model's answer is read as $\log p(A) - \log p(B)$. Open circle: the readout before the conclusion sentence; filled circle: after it, where the model wrote \texttt{</think>}. The double arrow marks the jump across the conclusion sentence. The readout stays near zero through most of each trajectory and rises in the last sentences, and the jump shrinks with length.}
+\caption{The closed readout along three reasoning trajectories of one question (Qwen3-8B; MedXpertQA pair Text-699, left unilateral sacral extension versus flexion, correct answer A), of 523, 941 and 1,330 thinking tokens (the 10th percentile, above the median, and the 90th percentile of length among the question's correct traces). At every sentence boundary the thinking is cut, the thinking block is closed, and the model's answer is read as $\log p(A) - \log p(B)$. Open circle: the readout before the conclusion sentence; filled circle: after it, where the model wrote \texttt{</think>}. The double arrow marks the jump across the conclusion sentence. The readout stays near zero through most of each trajectory and rises in the last sentences, and the jump shrinks with length.}
 \label{fig:examples}
 \end{figure}
 
