@@ -816,7 +816,7 @@ def jump_length_hist() -> None:
             v = v.rho
             ax.axvline(0, color=MID, lw=0.6)
             ax.set_xlim(-1, 1)
-            ax.set_xlabel("r (reasoning length and increase in confidence over final sentence)")
+            ax.set_xlabel("r (reasoning length and\nincrease in confidence over final sentence)")
             ax.set_title(lab, fontsize=7.5, loc="left")
             ax.text(0.03, 0.95, f"median {v.median():+.2f}\n{(v < 0).mean():.0%} of traces below 0", transform=ax.transAxes, fontsize=6.5, va="top")
         axes[0].set_ylabel("traces")
