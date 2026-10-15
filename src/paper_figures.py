@@ -614,49 +614,58 @@ def fig8() -> None:
 # ------------------------------------------------------------------------------------------------------------------- fig 9
 
 def fig9() -> None:
+    """Confidence in the chosen option with the full reasoning and with the conclusion sentence hidden, against length and against the conclusion's attention share."""
     t = pd.read_csv(SCREEN / "medxpertqa_ablation_conclusion.csv")
-    t["effect_dev"] = t.effect_concl_all - t.groupby("item_id").effect_concl_all.transform("median")
+    med = t.groupby("item_id").y_base.transform("median")                                 # the question's full-reasoning median
+    t["base_rel"] = t.y_base - med
+    t["hidden_rel"] = t.y_concl_all - med
     t["share_dev"] = t.mass_conclusion - t.groupby("item_id").mass_conclusion.transform("median")
-    t["share_late_dev"] = t.mass_conclusion_late - t.groupby("item_id").mass_conclusion_late.transform("median")
-    by_len = t.groupby("quintile").agg(rel=("rel", "median"), effect=("effect_concl_all", "median"), q25=("effect_concl_all", lambda s_: s_.quantile(.25)), q75=("effect_concl_all", lambda s_: s_.quantile(.75)),
-                                       share=("mass_conclusion", "median"), n=("effect_concl_all", "size")).reset_index()
+    q = lambda s_, p_: s_.quantile(p_)
+    by_len = t.groupby("quintile").agg(rel=("rel", "median"), base=("y_base", "median"), base_q25=("y_base", lambda s_: q(s_, .25)), base_q75=("y_base", lambda s_: q(s_, .75)),
+                                       hidden=("y_concl_all", "median"), hidden_q25=("y_concl_all", lambda s_: q(s_, .25)), hidden_q75=("y_concl_all", lambda s_: q(s_, .75)),
+                                       effect=("effect_concl_all", "median"), share=("mass_conclusion", "median"), n=("y_base", "size")).reset_index()
+    d = t.dropna(subset=["share_dev"]).assign(b=lambda x: pd.qcut(x.share_dev, 10, labels=False))
+    by_share = d.groupby("b").agg(share_dev=("share_dev", "median"), base=("base_rel", "median"), base_q25=("base_rel", lambda s_: q(s_, .25)), base_q75=("base_rel", lambda s_: q(s_, .75)),
+                                  hidden=("hidden_rel", "median"), hidden_q25=("hidden_rel", lambda s_: q(s_, .25)), hidden_q75=("hidden_rel", lambda s_: q(s_, .75)),
+                                  effect=("effect_concl_all", "median"), n=("base_rel", "size")).reset_index()
     stats = pd.DataFrame([{"stat": "within-prompt Spearman rho of the conclusion's ablation effect with thinking tokens", "value": wrho(t, "think_tokens", "effect_concl_all")},
                           {"stat": "within-prompt rho of the effect with the conclusion's attention share (all layers)", "value": wrho(t, "mass_conclusion", "effect_concl_all")},
                           {"stat": "within-prompt rho of the effect with the conclusion's share in layers 24-35", "value": wrho(t, "mass_conclusion_late", "effect_concl_all")},
-                          {"stat": "within-prompt rho of the effect with the truncation jump", "value": wrho(t, "jump", "effect_concl_all")}])
-    bins = []
-    for col, lab in (("share_dev", "all layers"), ("share_late_dev", "layers 24-35")):
-        d = t.dropna(subset=[col]).assign(b=lambda x: pd.qcut(x[col], 10, labels=False))
-        for b, h in d.groupby("b"):
-            bins.append({"series": lab, "bin": b, "x_median": h[col].median(), "y_median": h.effect_dev.median(), "y_q25": h.effect_dev.quantile(.25), "y_q75": h.effect_dev.quantile(.75), "n": len(h)})
+                          {"stat": "within-prompt rho of the effect with the truncation change", "value": wrho(t, "jump", "effect_concl_all")},
+                          {"stat": "within-prompt rho of the full-reasoning confidence with the share", "value": wrho(t, "mass_conclusion", "y_base")},
+                          {"stat": "within-prompt rho of the conclusion-hidden confidence with the share", "value": wrho(t, "mass_conclusion", "y_concl_all")},
+                          {"stat": "within-prompt rho of the full-reasoning confidence with thinking tokens", "value": wrho(t, "think_tokens", "y_base")},
+                          {"stat": "within-prompt rho of the conclusion-hidden confidence with thinking tokens", "value": wrho(t, "think_tokens", "y_concl_all")}])
     by_len.to_csv(OUT / "fig9_effect_vs_length.csv", index=False)
-    pd.DataFrame(bins).to_csv(OUT / "fig9_effect_vs_length_bins.csv", index=False)
+    by_share.to_csv(OUT / "fig9_effect_vs_length_bins.csv", index=False)
     stats.to_csv(OUT / "fig9_effect_vs_length_stats.csv", index=False)
+    series = (("base", "full reasoning", BLACK, "o", "-"), ("hidden", "conclusion sentence hidden", MID, "s", "--"))
     with plt.rc_context(STYLE):
-        fig, axes = plt.subplots(1, 2, figsize=(6.0, 2.5))
+        fig, axes = plt.subplots(1, 2, figsize=(6.0, 2.6))
         ax = axes[0]
-        ax.errorbar(2 ** by_len.rel, by_len.effect, yerr=[by_len.effect - by_len.q25, by_len.q75 - by_len.effect], fmt="o-", color=BLACK, ms=3, lw=0.9, elinewidth=0.6, capsize=1.5)
+        for col, lab, color, mk, ls in series:
+            ax.errorbar(2 ** by_len.rel, by_len[col], yerr=[by_len[col] - by_len[f"{col}_q25"], by_len[f"{col}_q75"] - by_len[col]], fmt=mk + ls, color=color, ms=3, lw=0.9, elinewidth=0.6, capsize=1.5, label=lab)
         ax.set_xscale("log", base=2)
         ax.set_xticks([0.5, 1, 2]); ax.set_xticklabels(["0.5", "1", "2"])
-        ax.set_xlabel("thinking length / prompt median")
-        ax.set_ylabel("removed by hiding the conclusion (nats)")
-        ax.set_ylim(0, 7)
+        ax.set_xlabel("thinking length / question median")
+        ax.set_ylabel("confidence in the chosen option\n(log-odds, nats)")
+        ax.set_ylim(0, 15)
+        ax.legend(fontsize=6, loc="upper right")
         ax = axes[1]
-        b = pd.DataFrame(bins)
-        for lab, color, mk, ls in (("all layers", BLACK, "o", "-"), ("layers 24-35", MID, "s", "--")):
-            h = b[b.series == lab]
-            ax.errorbar(h.x_median * 100, h.y_median, yerr=[h.y_median - h.y_q25, h.y_q75 - h.y_median], fmt=mk + ls, color=color, ms=3, lw=0.9, elinewidth=0.6, capsize=1.5, label=lab)
-        ax.axhline(0, color=MID, lw=0.5); ax.axvline(0, color=MID, lw=0.5)
-        ax.set_xlabel("conclusion's attention share, % points\n(deviation from the prompt median)")
-        ax.set_ylabel("removed by hiding the conclusion\n(nats, deviation from the prompt median)")
+        for col, lab, color, mk, ls in series:
+            ax.errorbar(by_share.share_dev * 100, by_share[col], yerr=[by_share[col] - by_share[f"{col}_q25"], by_share[f"{col}_q75"] - by_share[col]], fmt=mk + ls, color=color, ms=3, lw=0.9, elinewidth=0.6, capsize=1.5, label=lab)
+        ax.axhline(0, color=MID, lw=0.5)
+        ax.axvline(0, color=MID, lw=0.5)
+        ax.set_xlabel("conclusion sentence's attention share\n(percentage points)")
+        ax.set_ylabel("confidence in the chosen option\n(nats)")
         ax.legend(fontsize=6, loc="upper left")
-        for ax_, letter, x in zip(axes, "ab", (-0.3, -0.35)):
+        for ax_, letter, x in zip(axes, "ab", (-0.3, -0.3)):
             ax_.text(x, 1.04, letter, transform=ax_.transAxes, fontsize=9, fontweight="bold", va="bottom")
-        fig.tight_layout(w_pad=1.5)
+        fig.tight_layout(w_pad=1.0)
         fig.savefig(OUT / "fig9_effect_vs_length.png")
         plt.close(fig)
     pd.set_option("display.width", 200)
-    print(by_len.round(3).to_string(index=False)); print(stats.round(3).to_string(index=False))
+    print(by_len.round(2).to_string(index=False)); print(by_share.round(2).to_string(index=False)); print(stats.round(3).to_string(index=False))
     print(f"-> {OUT / 'fig9_effect_vs_length.png'} (+ .csv, _bins.csv, _stats.csv)")
 
 

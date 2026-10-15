@@ -1,0 +1,9 @@
+stat,value
+within-prompt Spearman rho of the conclusion's ablation effect with thinking tokens,-0.24137696912655282
+within-prompt rho of the effect with the conclusion's attention share (all layers),0.7244257114910381
+within-prompt rho of the effect with the conclusion's share in layers 24-35,0.803508622116988
+within-prompt rho of the effect with the truncation change,0.875742198167548
+within-prompt rho of the full-reasoning confidence with the share,0.46858674839805003
+within-prompt rho of the conclusion-hidden confidence with the share,-0.1440784607175925
+within-prompt rho of the full-reasoning confidence with thinking tokens,-0.4891581033372727
+within-prompt rho of the conclusion-hidden confidence with thinking tokens,-0.26270931347139265

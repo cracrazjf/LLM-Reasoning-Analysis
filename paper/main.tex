@@ -113,6 +113,15 @@ Reasoning language models end their thinking with a conclusion sentence (``There
 \label{fig:thinking}
 \end{figure}
 
+\item \textbf{What the answer reads from the conclusion sentence falls with length and follows the sentence's attention share.} Figure~\ref{fig:effect} plots the confidence in the chosen option with the full reasoning and with the conclusion sentence hidden, side by side. Against length (Figure~\ref{fig:effect}a), the full-reasoning confidence falls from 10.75 nats in the shortest fifth of traces to 7.9 in the longest (within-question Spearman $-0.49$), while the conclusion-hidden confidence falls less, from 6.25 to 4.75 ($-0.26$); the gap between the two lines, the amount the answer takes from the conclusion sentence, narrows from 4.0 to 3.0 nats ($-0.24$). Against the attention share the conclusion sentence receives (Figure~\ref{fig:effect}b), the full-reasoning confidence rises with the share ($+0.47$) and the conclusion-hidden confidence does not ($-0.14$), so the gap widens from 2.0 nats in the lowest decile of the share to 7.75 in the highest ($+0.72$; $+0.80$ with the share in layers 24--35 alone). The gap also tracks the change across the conclusion sentence measured by truncation in Figure~\ref{fig:jump} ($+0.88$), so the two experiments measure the same quantity. The length effect of Figure~\ref{fig:jump} is therefore a fall in what the answer actually reads from the conclusion sentence, and how much it reads is set by the attention share the sentence receives.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{confidence_inflation_in_llms/fig9_effect_vs_length.png}
+\caption{Confidence in the chosen option with the full reasoning (black) and with the conclusion sentence hidden from \texttt{</think>} and the answer-writing position (grey). (a) Against thinking length relative to the question's median (quintiles; medians with quartiles over 2,400 traces). (b) Against the attention share the conclusion sentence receives at the answer-writing position, in deciles; the share and both confidences are deviations from the question's median, the confidences from the median of the full-reasoning condition, so that the grey line sits below the black one by the amount the conclusion sentence contributes.}
+\label{fig:effect}
+\end{figure}
+
 \end{enumerate}
 
 \end{document}
