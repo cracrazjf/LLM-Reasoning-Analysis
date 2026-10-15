@@ -32,6 +32,15 @@ Reasoning language models end their thinking with a conclusion sentence (``There
 \label{fig:examples}
 \end{figure}
 
+\item \textbf{The jump shrinks with reasoning length, across and within questions.} The change in $\log p(A) - \log p(B)$ across the conclusion sentence falls as the thinking gets longer, whether the traces of all 12 questions are pooled or each trace is compared with the other traces of its own question (Figure~\ref{fig:jump}, top). The same holds when the model's own conclusion is replaced by one sentence written into every trace, ``Therefore, the answer is L.'' with L the trace's own letter, so the sentence is identical and only the reasoning before it differs (Figure~\ref{fig:jump}, bottom). The wording of the conclusion is therefore not what makes the jump smaller in long traces.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{confidence_inflation_in_llms/fig_jump_vs_length.png}
+\caption{The jump across the conclusion sentence against thinking length (2,400 traces; dots = traces, points = medians per decile with quartiles). Top: the model's own conclusion sentence. Bottom: the sentence ``Therefore, the answer is L.'' written at the onset of every trace in place of the model's own. Left: all traces pooled, $x$ = thinking tokens. Right: within question, $x$ = tokens over the question's median length, $y$ = the jump minus the question's median jump. Spearman correlations are given in each panel; the within-question value is the median over the 24 prompts.}
+\label{fig:jump}
+\end{figure}
+
 \end{enumerate}
 
 \end{document}

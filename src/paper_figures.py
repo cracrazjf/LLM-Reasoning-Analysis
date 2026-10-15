@@ -2,6 +2,7 @@
 
     python src/paper_figures.py positions        # table1_positions.csv: where every readout is taken, with the tokens of one example trace
     python src/paper_figures.py examples         # fig0_example_trajectories.png: the closed readout along three traces of one question
+    python src/paper_figures.py jump             # fig_jump_vs_length.png: the jump across the conclusion sentence against length, natural and written sentence
     python src/paper_figures.py fig1             # fig1_answer_attention.png: what the answer-writing position attends to
     python src/paper_figures.py fig2             # fig2_attention_vs_length.png: how that attention spreads as the thinking gets longer
     python src/paper_figures.py fig3             # fig3_jump_vs_attention.png: the conclusion's jump follows the attention it receives
@@ -718,7 +719,70 @@ def examples() -> None:
     print(f"-> {OUT / 'fig0_example_trajectories.png'}, .csv")
 
 
+# -------------------------------------------------------------------------------------------------------------- jump vs length
+
+def jump_vs_length() -> None:
+    """The jump across the conclusion sentence against thinking length: the model's own sentence and the written "Therefore, the
+    answer is L."; pooled across questions (x = tokens) and within question (x = tokens / prompt median, y = jump − prompt median)."""
+    from scipy.stats import spearmanr
+    ls = pd.read_csv(SCREEN / "medxpertqa_last_sentence_main.csv", usecols=["sample_id", "item_id", "correct", "think_tokens", "jump_closed"])
+    lt = pd.read_csv(SCREEN / "medxpertqa_letter_sentence.csv", usecols=["sample_id", "d_therefore_own"])
+    t = ls.merge(lt, on="sample_id")
+    t["jump_own"] = np.where(t.correct, t.jump_closed, -t.jump_closed)
+    t["jump_written"] = t.d_therefore_own
+    t["log_tokens"] = np.log(t.think_tokens)
+    t["rel"] = np.log2(t.think_tokens / t.groupby("item_id").think_tokens.transform("median"))
+    for c in ("jump_own", "jump_written"):
+        t[f"{c}_dev"] = t[c] - t.groupby("item_id")[c].transform("median")
+    stats, bins = [], []
+    with plt.rc_context(STYLE):
+        fig, axes = plt.subplots(2, 2, figsize=(6.0, 5.0))
+        for row, (col, lab) in enumerate((("jump_own", "the model's own conclusion sentence"), ("jump_written", 'written "Therefore, the answer is L."'))):
+            for coli, (xcol, ycol, xlabel, ylabel, kind) in enumerate(((("think_tokens", col, "thinking tokens", "jump across the conclusion (nats)", "pooled")),
+                                                                      ("rel", f"{col}_dev", "thinking tokens / prompt median", "jump, deviation from\nthe prompt median (nats)", "within"))):
+                ax = axes[row, coli]
+                d = t.dropna(subset=[xcol, ycol])
+                xs = d[xcol] if kind == "pooled" else 2 ** d[xcol]
+                ax.scatter(xs, d[ycol], s=2, color=LIGHT, edgecolors="none", rasterized=True)
+                b = d.assign(bin=pd.qcut(d[xcol], 10, labels=False)).groupby("bin").agg(x=(xcol, "median"), y=(ycol, "median"), lo=(ycol, lambda s_: s_.quantile(.25)), hi=(ycol, lambda s_: s_.quantile(.75)), n=(ycol, "size"))
+                bx = b.x if kind == "pooled" else 2 ** b.x
+                ax.errorbar(bx, b.y, yerr=[b.y - b.lo, b.hi - b.y], fmt="o-", color=BLACK, ms=3, lw=0.9, elinewidth=0.6, capsize=1.5)
+                if kind == "pooled":
+                    r = spearmanr(d[xcol], d[ycol]).correlation
+                    ax.set_xscale("log")
+                    ax.set_xticks([500, 1000, 2000, 4000]); ax.set_xticklabels(["500", "1000", "2000", "4000"])
+                    ax.set_ylim(-4, 14)
+                else:
+                    r = wrho(d, "think_tokens", col)
+                    ax.axhline(0, color=MID, lw=0.5)
+                    ax.set_xscale("log", base=2)
+                    ax.set_xticks([0.5, 1, 2]); ax.set_xticklabels(["0.5", "1", "2"])
+                    ax.set_xlim(0.3, 3.5)
+                    ax.set_ylim(-6, 8)
+                ax.text(0.98, 0.95, f"Spearman rho = {r:+.2f}" + ("" if kind == "pooled" else " (median over questions)"), transform=ax.transAxes, fontsize=6.5, ha="right", va="top")
+                if row == 1:
+                    ax.set_xlabel(xlabel)
+                if coli == 0:
+                    ax.set_ylabel(ylabel)
+                else:
+                    ax.set_ylabel(ylabel)
+                ax.set_title(lab if coli == 0 else "", fontsize=7.5, loc="left")
+                stats.append({"sentence": lab, "comparison": kind, "spearman_rho": r, "n": len(d)})
+                for bi, h in b.iterrows():
+                    bins.append({"sentence": lab, "comparison": kind, "bin": bi, "x_median": h.x if kind == "pooled" else 2 ** h.x, "jump_median": h.y, "q25": h.lo, "q75": h.hi, "n": int(h.n)})
+        for ax, letter in zip(axes.flatten(), "abcd"):
+            ax.text(-0.28, 1.06, letter, transform=ax.transAxes, fontsize=9, fontweight="bold", va="bottom")
+        fig.tight_layout(w_pad=1.5, h_pad=1.5)
+        fig.savefig(OUT / "fig_jump_vs_length.png")
+        plt.close(fig)
+    pd.DataFrame(stats).to_csv(OUT / "fig_jump_vs_length_stats.csv", index=False)
+    pd.DataFrame(bins).to_csv(OUT / "fig_jump_vs_length.csv", index=False)
+    pd.set_option("display.width", 200)
+    print(pd.DataFrame(stats).round(3).to_string(index=False))
+    print(f"-> {OUT / 'fig_jump_vs_length.png'} (+ .csv, _stats.csv)")
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "fig1"
     OUT.mkdir(parents=True, exist_ok=True)
-    {"examples": examples, "positions": positions_table, "fig1": fig1, "fig2": fig2, "fig3": fig3, "fig4": fig4, "ablation_table": ablation_table, "fig5": fig5, "fig6": fig6, "fig8": fig8, "fig9": fig9}[cmd]()
+    {"examples": examples, "jump": jump_vs_length, "positions": positions_table, "fig1": fig1, "fig2": fig2, "fig3": fig3, "fig4": fig4, "ablation_table": ablation_table, "fig5": fig5, "fig6": fig6, "fig8": fig8, "fig9": fig9}[cmd]()
