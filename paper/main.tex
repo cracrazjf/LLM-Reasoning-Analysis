@@ -68,6 +68,15 @@ Reasoning language models end their thinking with a conclusion sentence (``There
 \label{fig:attention_length}
 \end{figure}
 
+\item \textbf{The jump across the conclusion sentence follows the attention share the sentence receives.} Within a question, traces whose answer-writing position gives more of its attention to the conclusion sentence show a larger jump across it (Spearman $+0.61$, median over prompts; Figure~\ref{fig:jump_attention}a). The relation is the same when the sentence is the written ``Therefore, the answer is L.'', identical in every trace ($+0.62$; Figure~\ref{fig:jump_attention}b), so it is not driven by what the model chose to write. The share also accounts for the length effect of Figure~\ref{fig:jump}: in a regression of the jump on thinking length and the share, both demeaned within question, the length coefficient falls from $-0.74$ nats per standard deviation on its own to $-0.16$ once the share is included, while the share contributes $+1.42$ ($R^2$ 0.45; written sentence $-0.89$ to $-0.29$, share $+1.47$). Computed with the share in each layer separately, the correlation is about 0.2 in the first layers, 0.5 by layer 10 and 0.6--0.7 in layers 19--29 (Figure~\ref{fig:jump_attention}c).
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\textwidth]{confidence_inflation_in_llms/fig3_jump_vs_attention.png}
+\caption{The jump across the conclusion sentence against the attention share the sentence receives from the answer-writing position, both as deviations from their question medians (2,400 traces; dots = traces, line = medians per decile of the share with quartiles). (a) The model's own conclusion sentence. (b) The written sentence ``Therefore, the answer is L.'' (c) The within-question Spearman correlation between the jump and the share, computed with the share in each layer separately, for the own sentence (black) and the written sentence (grey).}
+\label{fig:jump_attention}
+\end{figure}
+
 \end{enumerate}
 
 \end{document}
