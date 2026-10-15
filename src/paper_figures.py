@@ -498,14 +498,19 @@ def fig5() -> None:
 # ------------------------------------------------------------------------------------------------------------------- fig 6
 
 def fig6() -> None:
+    """Confidence in the chosen option when the conclusion sentence is hidden in one group of layers; levels, as in Figure 8."""
     t = pd.read_csv(SCREEN / "medxpertqa_ablation_conclusion.csv")
     t["effect_sum"] = t.effect_concl_early + t.effect_concl_mid + t.effect_concl_late
-    conds = [("effect_concl_early", "layers 0-11"), ("effect_concl_mid", "layers 12-23"), ("effect_concl_late", "layers 24-35"), ("effect_sum", "sum of the three"), ("effect_concl_all", "all layers at once")]
+    t["y_pred"] = t.y_base - t.effect_sum                                             # if the three groups acted independently
+    conds = [("y_base", "full reasoning", True), ("y_concl_early", "hidden in layers 0-11", False), ("y_concl_mid", "hidden in layers 12-23", False),
+             ("y_concl_late", "hidden in layers 24-35", False), ("y_pred", "predicted from the three groups", True), ("y_concl_all", "hidden in all layers", False)]
     summ = pd.DataFrame([{"condition": lab, "median": t[c].median(), "q25": t[c].quantile(0.25), "q75": t[c].quantile(0.75),
-                          "flip_share": float((np.sign(t.y_base - t[c]) != np.sign(t.y_base)).mean()) if c != "effect_sum" else np.nan} for c, lab in conds])
+                          "flip_share": float((np.sign(t[c]) != np.sign(t.y_base)).mean()) if c not in ("y_base", "y_pred") else np.nan, "reference": ctl} for c, lab, ctl in conds])
     big = t[t.effect_concl_all.abs() > 1]
     stats = pd.DataFrame([{"stat": "ratio (early + mid + late) / all-layer effect, median over traces with |all| > 1 nat", "value": (big.effect_sum / big.effect_concl_all).median()},
-                          {"stat": "within-prompt Spearman rho of the sum with the all-layer effect", "value": wrho(t, "effect_concl_all", "effect_sum")},
+                          {"stat": "within-prompt Spearman rho of the sum of the three effects with the all-layer effect", "value": wrho(t, "effect_concl_all", "effect_sum")},
+                          {"stat": "within-prompt Spearman rho of the predicted level with the all-layer level", "value": wrho(t, "y_concl_all", "y_pred")},
+                          {"stat": "median of predicted minus observed all-layer level (nats)", "value": (t.y_pred - t.y_concl_all).median()},
                           {"stat": "share of the sum carried by layers 12-23, median", "value": (big.effect_concl_mid / big.effect_sum).median()},
                           {"stat": "share of the sum carried by layers 24-35, median", "value": (big.effect_concl_late / big.effect_sum).median()}])
     summ.to_csv(OUT / "fig6_ablation_layers.csv", index=False)
@@ -514,26 +519,25 @@ def fig6() -> None:
         fig, axes = plt.subplots(1, 2, figsize=(6.4, 2.7), gridspec_kw={"width_ratios": [1.3, 1]})
         ax = axes[0]
         y = np.arange(len(conds))[::-1]
-        for yi, (c, lab) in zip(y, conds):
-            ax.barh(yi, t[c].median(), color=LIGHT if c.startswith("effect_concl_") and c != "effect_concl_all" else MID, edgecolor=BLACK, linewidth=0.6, height=0.65,
-                    hatch="////" if c == "effect_sum" else None)
+        for yi, (c, lab, ctl) in zip(y, conds):
+            ax.barh(yi, t[c].median(), color=LIGHT, edgecolor=BLACK, linewidth=0.6, height=0.65, hatch="////" if ctl else None)
             ax.errorbar(t[c].median(), yi, xerr=[[t[c].median() - t[c].quantile(0.25)], [t[c].quantile(0.75) - t[c].median()]], fmt="none", ecolor=BLACK, elinewidth=0.6, capsize=2)
-        ax.axvline(0, color=BLACK, lw=0.6)
-        ax.set_yticks(y); ax.set_yticklabels([lab for _, lab in conds])
+        ax.set_yticks(y); ax.set_yticklabels([lab for _, lab, _ in conds], fontsize=7)
         ax.tick_params(axis="y", length=0)
-        ax.set_xlabel("decrease in confidence in the chosen option\nwhen the conclusion sentence is hidden (nats)")
+        ax.set_xlabel("confidence in the chosen option (log-odds, nats)")
+        ax.set_xlim(0, 13)
         ax = axes[1]
-        d = t.dropna(subset=["effect_sum", "effect_concl_all"])
-        ax.scatter(d.effect_concl_all, d.effect_sum, s=2, color=LIGHT, edgecolors="none", rasterized=True)
-        b = d.assign(bin=pd.qcut(d.effect_concl_all, 10, labels=False)).groupby("bin").agg(x=("effect_concl_all", "median"), y=("effect_sum", "median"), lo=("effect_sum", lambda s_: s_.quantile(0.25)), hi=("effect_sum", lambda s_: s_.quantile(0.75)))
+        d = t.dropna(subset=["y_pred", "y_concl_all"])
+        ax.scatter(d.y_concl_all, d.y_pred, s=2, color=LIGHT, edgecolors="none", rasterized=True)
+        b = d.assign(bin=pd.qcut(d.y_concl_all, 10, labels=False)).groupby("bin").agg(x=("y_concl_all", "median"), y=("y_pred", "median"), lo=("y_pred", lambda s_: s_.quantile(0.25)), hi=("y_pred", lambda s_: s_.quantile(0.75)))
         ax.errorbar(b.x, b.y, yerr=[b.y - b.lo, b.hi - b.y], fmt="o", color=BLACK, ms=3, elinewidth=0.6, capsize=1.5)
-        lim = (-4, 16)
+        lim = (-6, 20)
         ax.plot(lim, lim, color=MID, lw=0.6, ls="--")
         ax.set_xlim(lim); ax.set_ylim(lim)
-        ax.set_xticks([0, 5, 10, 15]); ax.set_yticks([0, 5, 10, 15])
-        ax.set_xlabel("decrease in confidence in the chosen option,\nconclusion hidden in all layers at once (nats)")
-        ax.set_ylabel("sum of the decreases over\nthe three layer groups (nats)")
-        for ax_, letter, x in zip(axes, "ab", (-0.45, -0.3)):
+        ax.set_xticks([-5, 0, 5, 10, 15, 20]); ax.set_yticks([-5, 0, 5, 10, 15, 20])
+        ax.set_xlabel("confidence in the chosen option,\nconclusion hidden in all layers (nats)")
+        ax.set_ylabel("confidence in the chosen option\npredicted from the three groups (nats)")
+        for ax_, letter, x in zip(axes, "ab", (-0.62, -0.3)):
             ax_.text(x, 1.04, letter, transform=ax_.transAxes, fontsize=9, fontweight="bold", va="bottom")
         fig.tight_layout(w_pad=1.0)
         fig.savefig(OUT / "fig6_ablation_layers.png")

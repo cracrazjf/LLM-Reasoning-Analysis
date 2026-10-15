@@ -1,0 +1,7 @@
+stat,value
+"ratio (early + mid + late) / all-layer effect, median over traces with |all| > 1 nat",1.0377492596993885
+within-prompt Spearman rho of the sum of the three effects with the all-layer effect,0.946971899538474
+within-prompt Spearman rho of the predicted level with the all-layer level,0.9519057487515539
+median of predicted minus observed all-layer level (nats),-1.7361157915729564e-06
+"share of the sum carried by layers 12-23, median",0.5714285755910137
+"share of the sum carried by layers 24-35, median",0.5384615742241716
