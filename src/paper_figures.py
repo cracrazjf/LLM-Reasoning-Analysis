@@ -3,6 +3,7 @@
     python src/paper_figures.py positions        # table1_positions.csv: where every readout is taken, with the tokens of one example trace
     python src/paper_figures.py examples         # fig0_example_trajectories.png: the closed readout along three traces of one question
     python src/paper_figures.py jump             # fig_jump_vs_length.png: the jump across the conclusion sentence against length, natural and written sentence
+    python src/paper_figures.py jumphist         # fig_jump_length_hist.png: histogram over questions of the correlation between length and the jump
     python src/paper_figures.py fig1             # fig1_answer_attention.png: what the answer-writing position attends to
     python src/paper_figures.py fig2             # fig2_attention_vs_length.png: how that attention spreads as the thinking gets longer
     python src/paper_figures.py fig3             # fig3_jump_vs_attention.png: the conclusion's jump follows the attention it receives
@@ -782,7 +783,58 @@ def jump_vs_length() -> None:
     print(f"-> {OUT / 'fig_jump_vs_length.png'} (+ .csv, _stats.csv)")
 
 
+# ---------------------------------------------------------------------------------------------------- jump-length correlation hist
+
+def jump_length_hist() -> None:
+    """Per question (pair x option order), the Spearman correlation between thinking length and the jump across the conclusion
+    sentence; histogram over the 24 questions, for the model's own sentence and for the written sentence, with a permutation null."""
+    from scipy.stats import rankdata
+    ls = pd.read_csv(SCREEN / "medxpertqa_last_sentence_main.csv", usecols=["sample_id", "item_id", "correct", "think_tokens", "jump_closed"])
+    lt = pd.read_csv(SCREEN / "medxpertqa_letter_sentence.csv", usecols=["sample_id", "d_therefore_own"])
+    t = ls.merge(lt, on="sample_id")
+    t["jump_own"] = np.where(t.correct, t.jump_closed, -t.jump_closed)
+    t["jump_written"] = t.d_therefore_own
+    rng = np.random.default_rng(0)
+    rows, null = [], {"jump_own": [], "jump_written": []}
+    for iid, g in t.groupby("item_id"):
+        rt = rankdata(g.think_tokens)
+        rtc = (rt - rt.mean()) / rt.std()
+        for col in ("jump_own", "jump_written"):
+            ry = rankdata(g[col])
+            rows.append({"item_id": iid, "sentence": col, "rho": float(np.corrcoef(rt, ry)[0, 1]), "n": len(g)})
+            perm = np.array([rng.permutation(ry) for _ in range(200)])
+            pc = (perm - perm.mean(1, keepdims=True)) / perm.std(1, keepdims=True)
+            null[col].append(pc @ rtc / len(rt))
+    r = pd.DataFrame(rows)
+    r.to_csv(OUT / "fig_jump_length_hist.csv", index=False)
+    bins = np.arange(-1, 1.0001, 0.1)
+    with plt.rc_context(STYLE):
+        fig, axes = plt.subplots(1, 2, figsize=(6.0, 2.5), sharey=True)
+        for ax, (col, lab) in zip(axes, (("jump_own", "the model's own conclusion sentence"), ("jump_written", 'written "Therefore, the answer is L."'))):
+            v = r[r.sentence == col].rho
+            ax.hist(v, bins=bins, color=LIGHT, edgecolor=BLACK, linewidth=0.6)
+            hn, _ = np.histogram(np.concatenate(null[col]), bins=bins)
+            hn = hn * len(v) / hn.sum()
+            ax.step(bins, np.r_[hn, hn[-1]], where="post", color=BLACK, lw=0.8, ls="--", label="permutation null")
+            ax.axvline(0, color=MID, lw=0.6)
+            ax.set_xlim(-1, 1)
+            ax.set_xlabel("Spearman correlation of thinking length\nwith the jump across the conclusion, per question")
+            ax.set_title(lab, fontsize=7.5, loc="left")
+            ax.text(0.03, 0.95, f"median {v.median():+.2f}\n{(v < 0).mean():.0%} of questions below 0", transform=ax.transAxes, fontsize=6.5, va="top")
+        axes[0].set_ylabel("questions")
+        axes[1].legend(fontsize=6, loc="upper right")
+        for ax, letter in zip(axes, "ab"):
+            ax.text(-0.18, 1.06, letter, transform=ax.transAxes, fontsize=9, fontweight="bold", va="bottom")
+        fig.tight_layout(w_pad=1.5)
+        fig.savefig(OUT / "fig_jump_length_hist.png")
+        plt.close(fig)
+    pd.set_option("display.width", 200)
+    print(r.groupby("sentence").rho.describe().round(3).to_string())
+    print(f"null sd (100 traces per question): own {np.concatenate(null['jump_own']).std():.3f}, written {np.concatenate(null['jump_written']).std():.3f}")
+    print(f"-> {OUT / 'fig_jump_length_hist.png'}, .csv")
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "fig1"
     OUT.mkdir(parents=True, exist_ok=True)
-    {"examples": examples, "jump": jump_vs_length, "positions": positions_table, "fig1": fig1, "fig2": fig2, "fig3": fig3, "fig4": fig4, "ablation_table": ablation_table, "fig5": fig5, "fig6": fig6, "fig8": fig8, "fig9": fig9}[cmd]()
+    {"examples": examples, "jump": jump_vs_length, "jumphist": jump_length_hist, "positions": positions_table, "fig1": fig1, "fig2": fig2, "fig3": fig3, "fig4": fig4, "ablation_table": ablation_table, "fig5": fig5, "fig6": fig6, "fig8": fig8, "fig9": fig9}[cmd]()
