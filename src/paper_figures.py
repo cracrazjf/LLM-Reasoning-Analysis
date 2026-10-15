@@ -811,14 +811,15 @@ def jump_length_hist() -> None:
     with plt.rc_context(STYLE):
         fig, axes = plt.subplots(1, 2, figsize=(6.0, 2.5), sharey=True)
         for ax, (col, lab) in zip(axes, (("jump_own", "the model's own conclusion sentence"), ("jump_written", 'written "Therefore, the answer is L."'))):
-            v = r[r.sentence == col].rho
-            ax.hist(v, bins=bins, color=LIGHT, edgecolor=BLACK, linewidth=0.6)
+            v = r[r.sentence == col]
+            ax.hist(v.rho, bins=bins, weights=v.n, color=LIGHT, edgecolor=BLACK, linewidth=0.6)     # every trace counts, under its question's correlation
+            v = v.rho
             ax.axvline(0, color=MID, lw=0.6)
             ax.set_xlim(-1, 1)
             ax.set_xlabel("Spearman correlation of thinking length\nwith the jump across the conclusion, per question")
             ax.set_title(lab, fontsize=7.5, loc="left")
-            ax.text(0.03, 0.95, f"median {v.median():+.2f}\n{(v < 0).mean():.0%} of questions below 0", transform=ax.transAxes, fontsize=6.5, va="top")
-        axes[0].set_ylabel("questions")
+            ax.text(0.03, 0.95, f"median {v.median():+.2f}\n{(v < 0).mean():.0%} of traces below 0", transform=ax.transAxes, fontsize=6.5, va="top")
+        axes[0].set_ylabel("traces")
         for ax, letter in zip(axes, "ab"):
             ax.text(-0.18, 1.06, letter, transform=ax.transAxes, fontsize=9, fontweight="bold", va="bottom")
         fig.tight_layout(w_pad=1.5)
