@@ -325,8 +325,8 @@ def fig3() -> None:
             ax.errorbar(b.x_median, b.y_median, yerr=[b.y_median - b.y_q25, b.y_q75 - b.y_median], fmt="o-", color=BLACK, ms=3, lw=0.9, elinewidth=0.6, capsize=1.5)
             ax.axhline(0, color=MID, lw=0.5); ax.axvline(0, color=MID, lw=0.5)
             ax.set_xlim(-0.02, 0.03); ax.set_ylim(-8, 10)
-            ax.set_xlabel("conclusion's attention share\n(deviation from the prompt median)")
-            ax.set_ylabel("jump across the conclusion (nats,\ndeviation from the prompt median)" if col == "jump_own" else "")
+            ax.set_xlabel("conclusion sentence's attention share")
+            ax.set_ylabel("jump across the conclusion (nats)" if col == "jump_own" else "")
             ax.set_title(lab, fontsize=7.5)
         ax = axes[2]
         ax.plot(prof.layer, prof.rho_own, color=BLACK, lw=0.9, marker="o", ms=2.5, label="own sentence")
