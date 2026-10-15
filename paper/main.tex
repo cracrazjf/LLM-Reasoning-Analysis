@@ -95,6 +95,15 @@ Reasoning language models end their thinking with a conclusion sentence (``There
 \label{fig:ablation}
 \end{figure}
 
+\item \textbf{Only the middle and late layers carry the conclusion to the answer, and their contributions add up.} Hiding the conclusion sentence in one group of layers at a time, the decrease in confidence in the chosen option is $-0.5$ nats for layers 0--11 (nothing, and no answer flips), 2.0 for layers 12--23 and 1.75 for layers 24--35, against 3.25 when all 36 layers hide it (Figure~\ref{fig:layers}a). Trace by trace, the sum of the three group effects equals the all-layer effect (ratio 1.04, within-question Spearman $+0.95$; Figure~\ref{fig:layers}b), so the three groups act independently and no group compensates when another is blocked.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\textwidth]{confidence_inflation_in_llms/fig6_ablation_layers.png}
+\caption{Which layers carry the conclusion sentence to the answer. (a) Decrease in confidence in the chosen option when the conclusion sentence is hidden from \texttt{</think>} and the answer-writing position in one group of layers only (median, quartiles over 2,400 traces); hatched = the sum of the three group effects; last bar = all 36 layers at once. (b) Per trace, the sum of the three group effects against the all-layer effect (dots = traces, points = medians per decile with quartiles, dashed = equality).}
+\label{fig:layers}
+\end{figure}
+
 \end{enumerate}
 
 \end{document}

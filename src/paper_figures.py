@@ -511,7 +511,7 @@ def fig6() -> None:
     summ.to_csv(OUT / "fig6_ablation_layers.csv", index=False)
     stats.to_csv(OUT / "fig6_ablation_layers_stats.csv", index=False)
     with plt.rc_context(STYLE):
-        fig, axes = plt.subplots(1, 2, figsize=(6.0, 2.5), gridspec_kw={"width_ratios": [1.3, 1]})
+        fig, axes = plt.subplots(1, 2, figsize=(6.4, 2.7), gridspec_kw={"width_ratios": [1.3, 1]})
         ax = axes[0]
         y = np.arange(len(conds))[::-1]
         for yi, (c, lab) in zip(y, conds):
@@ -521,7 +521,7 @@ def fig6() -> None:
         ax.axvline(0, color=BLACK, lw=0.6)
         ax.set_yticks(y); ax.set_yticklabels([lab for _, lab in conds])
         ax.tick_params(axis="y", length=0)
-        ax.set_xlabel("removed from the answer lean by hiding\nthe conclusion in those layers (nats)")
+        ax.set_xlabel("decrease in confidence in the chosen option\nwhen the conclusion sentence is hidden (nats)")
         ax = axes[1]
         d = t.dropna(subset=["effect_sum", "effect_concl_all"])
         ax.scatter(d.effect_concl_all, d.effect_sum, s=2, color=LIGHT, edgecolors="none", rasterized=True)
@@ -531,8 +531,8 @@ def fig6() -> None:
         ax.plot(lim, lim, color=MID, lw=0.6, ls="--")
         ax.set_xlim(lim); ax.set_ylim(lim)
         ax.set_xticks([0, 5, 10, 15]); ax.set_yticks([0, 5, 10, 15])
-        ax.set_xlabel("removed, all layers at once (nats)")
-        ax.set_ylabel("sum of the three layer groups (nats)")
+        ax.set_xlabel("decrease in confidence in the chosen option,\nconclusion hidden in all layers at once (nats)")
+        ax.set_ylabel("sum of the decreases over\nthe three layer groups (nats)")
         for ax_, letter, x in zip(axes, "ab", (-0.45, -0.3)):
             ax_.text(x, 1.04, letter, transform=ax_.transAxes, fontsize=9, fontweight="bold", va="bottom")
         fig.tight_layout(w_pad=1.0)
