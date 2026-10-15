@@ -858,9 +858,9 @@ def attention_shares() -> None:
                 ax.set_xscale("log")
             for p, m_, l_, h_ in zip(order, med, lo, hi):
                 rows.append({"panel": panel, "category": labels[p], "tokens_median": a[f"n_{p}"].median(), "median": m_, "q25": l_, "q75": h_})
+        fig.subplots_adjust(left=0.2, right=0.985, bottom=0.27, top=0.9, wspace=1.0)     # the two panels get the same width
         for ax, letter in zip(axes, "ab"):
-            ax.text(-0.72, 1.04, letter, transform=ax.transAxes, fontsize=9, fontweight="bold", va="bottom")
-        fig.tight_layout(w_pad=1.5)
+            ax.text(-0.62, 1.03, letter, transform=ax.transAxes, fontsize=9, fontweight="bold", va="bottom")
         fig.savefig(OUT / "fig_attention_shares.png")
         plt.close(fig)
     pd.DataFrame(rows).to_csv(OUT / "fig_attention_shares.csv", index=False)
