@@ -59,6 +59,15 @@ Reasoning language models end their thinking with a conclusion sentence (``There
 \label{fig:attention}
 \end{figure}
 
+\item \textbf{Longer reasoning spreads the answer-writing position's attention over more tokens, and the fixed-size parts of the context lose share.} Within a question, the share of the question stem falls as the reasoning gets longer (Spearman $-0.93$, median over prompts), the share of the model's own reasoning rises ($+0.87$), and the conclusion sentence loses share more slowly ($-0.31$; Figure~\ref{fig:attention_length}a). We summarise the spread of a head's attention by its entropy $H = -\sum_i p_i \log p_i$ over the context tokens: $e^{H}$ is the number of tokens the attention would have to be spread over uniformly to give the same entropy, the effective number of attended tokens, and $H/\log n$ with $n$ the context length is 0 when one token takes all the attention and 1 when all $n$ tokens share it equally. Averaged over the 1,152 heads, the effective number of attended tokens grows with context length, from 26 in the shortest fifth of the traces to 48 in the longest (Figure~\ref{fig:attention_length}b), while $H/\log n$ stays at 0.33 (Figure~\ref{fig:attention_length}c). The attention is therefore neither pinned to a fixed set of tokens nor spread uniformly: as the context grows, each head keeps the same degree of concentration relative to the context, so the set it attends to grows with the context and the parts whose size does not grow, the stem and the conclusion sentence, receive a smaller share.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\textwidth]{confidence_inflation_in_llms/fig2_attention_vs_length.png}
+\caption{The answer-writing position's attention against thinking length (2,400 traces). (a) Share of attention on each category of context token against the trace's thinking length relative to its question's median (log axes; medians over eight quantile bins of relative length). (b) The effective number of attended tokens, $e^{H}$ averaged over the 36 $\times$ 32 heads, against context length (prompt plus thinking tokens; dots = traces, line = medians per decile, dashed = growth proportional to length). (c) $H/\log(\text{context length})$, averaged over heads, against context length.}
+\label{fig:attention_length}
+\end{figure}
+
 \end{enumerate}
 
 \end{document}
