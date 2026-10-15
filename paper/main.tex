@@ -50,6 +50,15 @@ Reasoning language models end their thinking with a conclusion sentence (``There
 \label{fig:jumphist}
 \end{figure}
 
+\item \textbf{What the answer-writing position attends to.} We recompute the attention of the position that writes the answer letter (the newline after \texttt{</think>}) in all 36 layers and 32 heads of Qwen3-8B, for every trace, and sum the weights over categories of context tokens. As a block, the first token (the attention sink), the chat-format tokens and the model's own reasoning take most of the attention and the conclusion sentence only 4\% (Figure~\ref{fig:attention}a). Per token, the picture reverses: a token of the conclusion sentence receives about 25 times the attention of a token of the earlier reasoning and 15 times that of a token of the question stem, the highest per-token share of any content (Figure~\ref{fig:attention}b).
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{confidence_inflation_in_llms/fig_attention_shares.png}
+\caption{Attention of the answer-writing position by category of context token (2,400 traces; attention weights recomputed in every layer and head and averaged; bars = median over traces, whiskers = quartiles; each panel sorted from the largest to the smallest). (a) The share of the position's attention on each category. (b) The same share divided by the number of tokens in the category (log axis). Format tokens: the chat template, the instruction, \texttt{<think>}, \texttt{</think>} and the position itself.}
+\label{fig:attention}
+\end{figure}
+
 \end{enumerate}
 
 \end{document}

@@ -4,6 +4,7 @@
     python src/paper_figures.py examples         # fig0_example_trajectories.png: the closed readout along three traces of one question
     python src/paper_figures.py jump             # fig_jump_vs_length.png: the jump across the conclusion sentence against length, natural and written sentence
     python src/paper_figures.py jumphist         # fig_jump_length_hist.png: histogram over questions of the correlation between length and the jump
+    python src/paper_figures.py attention        # fig_attention_shares.png: attention share per token category and per token in category, sorted
     python src/paper_figures.py fig1             # fig1_answer_attention.png: what the answer-writing position attends to
     python src/paper_figures.py fig2             # fig2_attention_vs_length.png: how that attention spreads as the thinking gets longer
     python src/paper_figures.py fig3             # fig3_jump_vs_attention.png: the conclusion's jump follows the attention it receives
@@ -831,7 +832,44 @@ def jump_length_hist() -> None:
     print(f"-> {OUT / 'fig_jump_length_hist.png'}, .csv")
 
 
+# ------------------------------------------------------------------------------------------------------------ attention shares
+
+def attention_shares() -> None:
+    """What the answer-writing position attends to: (a) share per token category, (b) share per token within the category; each
+    panel sorted from the largest to the smallest median."""
+    a = answer_masses()
+    names = [p for p, _ in PARTS]
+    labels = dict(PARTS)
+    share = pd.DataFrame({p: a[f"mass_{p}"] for p in names})
+    per_token = pd.DataFrame({p: a[f"mass_{p}"] / a[f"n_{p}"].clip(lower=1) for p in names})
+    rows = []
+    with plt.rc_context(STYLE):
+        fig, axes = plt.subplots(1, 2, figsize=(6.4, 2.6))
+        for ax, df, xlabel, log, panel in ((axes[0], share, "attention share\nper token category", False, "a"), (axes[1], per_token, "attention share\nper token in category", True, "b")):
+            order = df.median().sort_values(ascending=False).index.tolist()
+            y = np.arange(len(order))[::-1]
+            med, lo, hi = df[order].median().values, df[order].quantile(0.25).values, df[order].quantile(0.75).values
+            ax.barh(y, med, color=LIGHT, edgecolor=BLACK, linewidth=0.6, height=0.65)
+            ax.errorbar(med, y, xerr=[med - lo, hi - med], fmt="none", ecolor=BLACK, elinewidth=0.6, capsize=2)
+            ax.set_yticks(y); ax.set_yticklabels([labels[p] for p in order])
+            ax.tick_params(axis="y", length=0)
+            ax.set_xlabel(xlabel)
+            if log:
+                ax.set_xscale("log")
+            for p, m_, l_, h_ in zip(order, med, lo, hi):
+                rows.append({"panel": panel, "category": labels[p], "tokens_median": a[f"n_{p}"].median(), "median": m_, "q25": l_, "q75": h_})
+        for ax, letter in zip(axes, "ab"):
+            ax.text(-0.72, 1.04, letter, transform=ax.transAxes, fontsize=9, fontweight="bold", va="bottom")
+        fig.tight_layout(w_pad=1.5)
+        fig.savefig(OUT / "fig_attention_shares.png")
+        plt.close(fig)
+    pd.DataFrame(rows).to_csv(OUT / "fig_attention_shares.csv", index=False)
+    pd.set_option("display.width", 200)
+    print(pd.DataFrame(rows).round(4).to_string(index=False))
+    print(f"-> {OUT / 'fig_attention_shares.png'}, .csv")
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "fig1"
     OUT.mkdir(parents=True, exist_ok=True)
-    {"examples": examples, "jump": jump_vs_length, "jumphist": jump_length_hist, "positions": positions_table, "fig1": fig1, "fig2": fig2, "fig3": fig3, "fig4": fig4, "ablation_table": ablation_table, "fig5": fig5, "fig6": fig6, "fig8": fig8, "fig9": fig9}[cmd]()
+    {"examples": examples, "jump": jump_vs_length, "jumphist": jump_length_hist, "attention": attention_shares, "positions": positions_table, "fig1": fig1, "fig2": fig2, "fig3": fig3, "fig4": fig4, "ablation_table": ablation_table, "fig5": fig5, "fig6": fig6, "fig8": fig8, "fig9": fig9}[cmd]()
