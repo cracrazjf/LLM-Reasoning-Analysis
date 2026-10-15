@@ -378,9 +378,8 @@ def fig4() -> None:
         ax.set_xlabel("proportion of the thinking kept")
         ax.set_ylabel("attention share of the last token kept")
         ax.set_ylim(0, 0.64)
-        handles, labels_ = ax.get_legend_handles_labels()
-        handles.append(Line2D([], [], marker="o", ms=3.5, color=BLACK, ls="none")); labels_.append("at 1: the last thinking token")
-        ax.legend(handles, labels_, fontsize=5.5, loc="upper left", bbox_to_anchor=(0.1, 1.0), handlelength=2.2)
+        handles = [Line2D([], [], color=color, ls=ls, lw=0.9, marker=mk, ms=3.5, markerfacecolor="white" if mk in ("D", "v") else color, markeredgewidth=0.7) for p, lab, color, ls, mk in FIG4_PARTS]
+        ax.legend(handles, [lab for _, lab, *_ in FIG4_PARTS], fontsize=5.5, loc="upper left", bbox_to_anchor=(0.12, 1.0), handlelength=2.6)
         ax = axes[1]
         ax.fill_between(body.t, body.ent_q25, body.ent_q75, color=LIGHT, lw=0)
         ax.plot(body.t, body.ent_norm, color=BLACK, lw=0.9)
@@ -398,7 +397,8 @@ def fig4() -> None:
         ax.set_xlabel("proportion of the thinking kept")
         ax.set_ylabel("attention share per sentence")
         ax.set_yscale("log")
-        ax.legend(fontsize=5.5, loc="upper right", handlelength=2.2)
+        handles = [Line2D([], [], color=color, ls=ls, lw=0.9, marker=mk, ms=3.5, markerfacecolor="white" if mk == "D" else color, markeredgewidth=0.7) for c, lab, color, ls, mk in CLASSES]
+        ax.legend(handles, [lab for _, lab, *_ in CLASSES], fontsize=5.5, loc="upper right", handlelength=2.6)
         for ax, letter in zip(axes, "abc"):
             ax.text(-0.3, 1.04, letter, transform=ax.transAxes, fontsize=9, fontweight="bold", va="bottom")
         fig.tight_layout(w_pad=1.2)
