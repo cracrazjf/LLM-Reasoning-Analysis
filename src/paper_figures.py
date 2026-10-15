@@ -326,7 +326,7 @@ def fig3() -> None:
             ax.axhline(0, color=MID, lw=0.5); ax.axvline(0, color=MID, lw=0.5)
             ax.set_xlim(-0.02, 0.03); ax.set_ylim(-8, 10)
             ax.set_xlabel("conclusion sentence's attention share")
-            ax.set_ylabel("jump across the conclusion (nats)" if col == "jump_own" else "")
+            ax.set_ylabel("change across the conclusion (nats)" if col == "jump_own" else "")
             ax.set_title(lab, fontsize=7.5)
         ax = axes[2]
         ax.plot(prof.layer, prof.rho_own, color=BLACK, lw=0.9, marker="o", ms=2.5, label="own sentence")
@@ -374,10 +374,13 @@ def fig4() -> None:
         for p, lab, color, ls, mk in FIG4_PARTS:
             ax.plot(body.t, body[f"mass_{p}"], color=color, ls=ls, lw=0.9, label=lab)
             ax.plot(stop.t, stop[f"mass_{p}"], marker=mk, ms=3.5, color=color, ls="none", markerfacecolor="white" if mk in ("D", "v") else color, markeredgewidth=0.7)
+        from matplotlib.lines import Line2D
         ax.set_xlabel("proportion of the thinking kept")
         ax.set_ylabel("attention share of the last token kept")
         ax.set_ylim(0, 0.64)
-        ax.legend(fontsize=5.5, loc="upper center", bbox_to_anchor=(0.6, 1.0), handlelength=2.2)
+        handles, labels_ = ax.get_legend_handles_labels()
+        handles.append(Line2D([], [], marker="o", ms=3.5, color=BLACK, ls="none")); labels_.append("at 1: the last thinking token")
+        ax.legend(handles, labels_, fontsize=5.5, loc="upper left", bbox_to_anchor=(0.1, 1.0), handlelength=2.2)
         ax = axes[1]
         ax.fill_between(body.t, body.ent_q25, body.ent_q75, color=LIGHT, lw=0)
         ax.plot(body.t, body.ent_norm, color=BLACK, lw=0.9)
@@ -740,8 +743,8 @@ def jump_vs_length() -> None:
     with plt.rc_context(STYLE):
         fig, axes = plt.subplots(2, 2, figsize=(6.0, 5.0))
         for row, (col, lab) in enumerate((("jump_own", "the model's own conclusion sentence"), ("jump_written", 'written "Therefore, the answer is L."'))):
-            for coli, (xcol, ycol, xlabel, ylabel, kind) in enumerate(((("think_tokens", col, "thinking tokens", "jump across the conclusion (nats)", "pooled")),
-                                                                      ("rel", f"{col}_dev", "thinking tokens / prompt median", "jump, deviation from\nthe prompt median (nats)", "within"))):
+            for coli, (xcol, ycol, xlabel, ylabel, kind) in enumerate(((("think_tokens", col, "thinking tokens", "change across the conclusion (nats)", "pooled")),
+                                                                      ("rel", f"{col}_dev", "thinking tokens / prompt median", "change across the conclusion (nats)", "within"))):
                 ax = axes[row, coli]
                 d = t.dropna(subset=[xcol, ycol])
                 xs = d[xcol] if kind == "pooled" else 2 ** d[xcol]
