@@ -1,0 +1,8 @@
+stat,value
+"rise from hiding the earlier thinking, median (nats)",1.9999996362137438
+share of traces whose earlier thinking alone favours the final answer (y_onset > 0),0.9525
+share of traces whose confidence rises when the earlier thinking is hidden,0.7470833333333333
+within-prompt Spearman rho of the rise with the support of the earlier thinking (y_onset),-0.49824577037968654
+within-prompt Spearman rho of the rise with log thinking length,0.28727190921701
+within-prompt Spearman rho of y_onset with log thinking length,-0.1943210115274512
+"rise in the most-supportive quarter of traces (y_onset top quartile), median",1.9999999999975555

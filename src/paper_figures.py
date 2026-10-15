@@ -550,59 +550,65 @@ def fig6() -> None:
 # ------------------------------------------------------------------------------------------------------------------- fig 8
 
 def fig8() -> None:
+    """Hiding the earlier thinking raises the confidence in the chosen option; the rise follows both its content and its amount."""
+    from length_accuracy import ols_demeaned
     t = pd.read_csv(SCREEN / "medxpertqa_ablation_conclusion.csv")
     pr = pd.read_csv(SCREEN / "medxpertqa_prompts.csv", usecols=["item_id", "nothink_gap"])
     t = t.merge(pr, on="item_id")
     t["y_none"] = np.where(t.correct, t.nothink_gap, -t.nothink_gap)                       # prompt only, toward the final answer
     t["y_additive"] = t.y_none + (t.y_onset - t.y_none) + (t.y_think_all - t.y_none)       # if the two parts added up
-    t["rise"] = -t.effect_think_all                                                       # lean gained when the earlier thinking is hidden
-    contexts = [("y_none", "prompt only"), ("y_onset", "prompt + earlier thinking"), ("y_think_all", "prompt + conclusion\n(earlier thinking hidden)"), ("y_base", "prompt + both"), ("y_additive", "if the two parts added up")]
-    summ = pd.DataFrame([{"context": lab, "median": t[c].median(), "q25": t[c].quantile(0.25), "q75": t[c].quantile(0.75)} for c, lab in contexts])
+    t["rise"] = -t.effect_think_all                                                       # confidence gained when the earlier thinking is hidden
+    contexts = [("y_none", "prompt only", False), ("y_onset", "prompt + earlier thinking", False), ("y_think_all", "prompt + conclusion sentence\n(earlier thinking hidden)", False),
+                ("y_base", "full reasoning", True), ("y_additive", "if the two parts added up", True)]
+    summ = pd.DataFrame([{"context": lab.replace("\n", " "), "median": t[c].median(), "q25": t[c].quantile(0.25), "q75": t[c].quantile(0.75), "reference": ref} for c, lab, ref in contexts])
     t["support_bin"] = pd.qcut(t.y_onset, 8, labels=False)
     by_support = t.groupby("support_bin").agg(y_onset=("y_onset", "median"), rise=("rise", "median"), q25=("rise", lambda s_: s_.quantile(0.25)), q75=("rise", lambda s_: s_.quantile(0.75)), n=("rise", "size")).reset_index()
     by_len = t.groupby("quintile").agg(rel=("rel", "median"), rise=("rise", "median"), q25=("rise", lambda s_: s_.quantile(0.25)), q75=("rise", lambda s_: s_.quantile(0.75)), n=("rise", "size")).reset_index()
     stats = pd.DataFrame([{"stat": "rise from hiding the earlier thinking, median (nats)", "value": t.rise.median()},
                           {"stat": "share of traces whose earlier thinking alone favours the final answer (y_onset > 0)", "value": float((t.y_onset > 0).mean())},
-                          {"stat": "share of traces whose lean rises when the earlier thinking is hidden", "value": float((t.rise > 0).mean())},
+                          {"stat": "share of traces whose confidence rises when the earlier thinking is hidden", "value": float((t.rise > 0).mean())},
                           {"stat": "within-prompt Spearman rho of the rise with the support of the earlier thinking (y_onset)", "value": wrho(t, "y_onset", "rise")},
-                          {"stat": "within-prompt Spearman rho of the rise with thinking tokens", "value": wrho(t, "think_tokens", "rise")},
+                          {"stat": "within-prompt Spearman rho of the rise with log thinking length", "value": wrho(t, "rel", "rise")},
+                          {"stat": "within-prompt Spearman rho of y_onset with log thinking length", "value": wrho(t, "rel", "y_onset")},
                           {"stat": "rise in the most-supportive quarter of traces (y_onset top quartile), median", "value": t[t.y_onset >= t.y_onset.quantile(0.75)].rise.median()}])
+    joint = pd.DataFrame(ols_demeaned(t, "rise", ["y_onset"], "support only") + ols_demeaned(t, "rise", ["rel"], "length only") + ols_demeaned(t, "rise", ["y_onset", "rel"], "support + length"))
     summ.to_csv(OUT / "fig8_ablation_thinking.csv", index=False)
     pd.concat([by_support.assign(panel="b"), by_len.assign(panel="c")]).to_csv(OUT / "fig8_ablation_thinking_bins.csv", index=False)
     stats.to_csv(OUT / "fig8_ablation_thinking_stats.csv", index=False)
+    joint.to_csv(OUT / "fig8_ablation_thinking_regression.csv", index=False)
     with plt.rc_context(STYLE):
-        fig, axes = plt.subplots(1, 3, figsize=(6.8, 2.5), gridspec_kw={"width_ratios": [1.3, 1, 1]})
+        fig, axes = plt.subplots(1, 3, figsize=(6.8, 2.7), gridspec_kw={"width_ratios": [1.3, 1, 1]})
         ax = axes[0]
         y = np.arange(len(contexts))[::-1]
-        for yi, (c, lab) in zip(y, contexts):
-            ax.barh(yi, t[c].median(), color=MID if c == "y_base" else LIGHT, edgecolor=BLACK, linewidth=0.6, height=0.65, hatch="////" if c == "y_additive" else None)
+        for yi, (c, lab, ref) in zip(y, contexts):
+            ax.barh(yi, t[c].median(), color=LIGHT, edgecolor=BLACK, linewidth=0.6, height=0.65, hatch="////" if ref else None)
             ax.errorbar(t[c].median(), yi, xerr=[[t[c].median() - t[c].quantile(0.25)], [t[c].quantile(0.75) - t[c].median()]], fmt="none", ecolor=BLACK, elinewidth=0.6, capsize=2)
         ax.axvline(0, color=BLACK, lw=0.6)
-        ax.set_yticks(y); ax.set_yticklabels([lab for _, lab in contexts], fontsize=6.5)
+        ax.set_yticks(y); ax.set_yticklabels([lab for _, lab, _ in contexts], fontsize=6.5)
         ax.tick_params(axis="y", length=0)
-        ax.set_xlabel("answer lean toward\nthe final answer (nats)")
+        ax.set_xlabel("confidence in the chosen option\n(log-odds, nats)")
         ax = axes[1]
         ax.errorbar(by_support.y_onset, by_support.rise, yerr=[by_support.rise - by_support.q25, by_support.q75 - by_support.rise], fmt="o-", color=BLACK, ms=3, lw=0.9, elinewidth=0.6, capsize=1.5)
         ax.axhline(0, color=MID, lw=0.6, ls="--")
-        ax.set_xlabel("lean of the earlier thinking\non its own (nats)")
-        ax.set_ylabel("lean gained when the earlier\nthinking is hidden (nats)")
+        ax.set_xlabel("confidence in the chosen option\nfrom the earlier thinking alone (nats)")
+        ax.set_ylabel("increase in confidence in the chosen\noption when the earlier thinking\nis hidden (nats)", fontsize=7)
         ax = axes[2]
         ax.errorbar(2 ** by_len.rel, by_len.rise, yerr=[by_len.rise - by_len.q25, by_len.q75 - by_len.rise], fmt="o-", color=BLACK, ms=3, lw=0.9, elinewidth=0.6, capsize=1.5)
         ax.axhline(0, color=MID, lw=0.6, ls="--")
         ax.set_xscale("log", base=2)
         ax.set_xticks([0.5, 1, 2]); ax.set_xticklabels(["0.5", "1", "2"])
-        ax.set_xlabel("thinking length /\nprompt median")
+        ax.set_xlabel("thinking length /\nquestion median")
         ax.set_ylabel("")
         axes[1].set_ylim(-3, 7); axes[2].set_ylim(-3, 7)
-        for ax_, letter, x in zip(axes, "abc", (-0.75, -0.38, -0.2)):
+        for ax_, letter, x in zip(axes, "abc", (-0.75, -0.5, -0.2)):
             ax_.text(x, 1.04, letter, transform=ax_.transAxes, fontsize=9, fontweight="bold", va="bottom")
         fig.tight_layout(w_pad=1.0)
         fig.savefig(OUT / "fig8_ablation_thinking.png")
         plt.close(fig)
     pd.set_option("display.width", 200)
-    print(summ.round(2).to_string(index=False)); print(stats.round(3).to_string(index=False))
+    print(summ.round(2).to_string(index=False)); print(stats.round(3).to_string(index=False)); print(joint.round(3).to_string(index=False))
     print(by_support.round(2).to_string(index=False)); print(by_len.round(2).to_string(index=False))
-    print(f"-> {OUT / 'fig8_ablation_thinking.png'} (+ .csv, _bins.csv, _stats.csv)")
+    print(f"-> {OUT / 'fig8_ablation_thinking.png'} (+ .csv, _bins.csv, _stats.csv, _regression.csv)")
 
 
 # ------------------------------------------------------------------------------------------------------------------- fig 9

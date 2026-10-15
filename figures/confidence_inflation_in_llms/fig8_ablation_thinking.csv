@@ -1,0 +1,6 @@
+context,median,q25,q75,reference
+prompt only,-1.7499999850988388,-3.4999999310821295,3.999999891966582,False
+prompt + earlier thinking,6.25,3.75,9.0,False
+prompt + conclusion sentence (earlier thinking hidden),10.999999523302904,8.250000034138793,14.25000035762804,False
+full reasoning,9.749999703686626,7.00000017718412,12.250000000011369,True
+if the two parts added up,17.4999997691275,14.500000184205419,20.0,True

@@ -104,6 +104,15 @@ Reasoning language models end their thinking with a conclusion sentence (``There
 \label{fig:layers}
 \end{figure}
 
+\item \textbf{The earlier thinking lowers the confidence that the conclusion sentence alone would give, partly by what it says and partly by how much of it there is.} We hide the earlier thinking, everything in the thinking before the conclusion sentence, from \texttt{</think>} and the answer-writing position, so that the answer sees the prompt and the conclusion sentence only. The confidence in the chosen option rises from 9.75 to 11.0 nats, in 75\% of traces (Figure~\ref{fig:thinking}a), although the earlier thinking on its own favours the final answer in 95\% of traces (6.25 nats when the reasoning is ended before the conclusion sentence). The two parts do not add up: taken separately they would give 17.5 nats, together they give 9.75. The increase from hiding the earlier thinking is largest where the earlier thinking supports the answer least (3.25 nats when it gives about 1 nat on its own, 1.25--1.5 when it gives 5--8; within-question Spearman $-0.50$; Figure~\ref{fig:thinking}b), yet it stays at 1.5 nats or more even where the earlier thinking supports the answer most strongly, and it grows with the length of the thinking (1.5 nats in the shortest three fifths, 3.25 in the longest fifth; Spearman $+0.29$; Figure~\ref{fig:thinking}c). The two terms are separate: in one within-question regression the increase changes by $-2.7$ nats per standard deviation of the earlier thinking's own support and by $+0.55$ per standard deviation of log length (95\% intervals $[-3.4, -2.1]$ and $[0.36, 0.74]$, cluster bootstrap over questions), while the two predictors are only weakly related (Spearman $-0.19$). So the earlier thinking never adds to what the conclusion sentence gives the answer; what it takes away depends on its content and, separately, on its amount, which is the dilution.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\textwidth]{confidence_inflation_in_llms/fig8_ablation_thinking.png}
+\caption{Hiding the earlier thinking from the answer. (a) Confidence in the chosen option when the answer-writing position sees the prompt only (the no-thinking answer), the prompt with the earlier thinking (the reasoning ended before the conclusion sentence), the prompt with the conclusion sentence while the earlier thinking is hidden from \texttt{</think>} and the answer-writing position, and the full reasoning (hatched reference); the last bar, also hatched, is what the two parts would give if their separate contributions added up (2,400 traces; bars = median, whiskers = quartiles). (b) The increase in confidence when the earlier thinking is hidden against the confidence the earlier thinking gives on its own (octiles; medians with quartiles). (c) The same increase against thinking length relative to the question's median (quintiles).}
+\label{fig:thinking}
+\end{figure}
+
 \end{enumerate}
 
 \end{document}
