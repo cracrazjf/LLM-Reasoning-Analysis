@@ -813,16 +813,12 @@ def jump_length_hist() -> None:
         for ax, (col, lab) in zip(axes, (("jump_own", "the model's own conclusion sentence"), ("jump_written", 'written "Therefore, the answer is L."'))):
             v = r[r.sentence == col].rho
             ax.hist(v, bins=bins, color=LIGHT, edgecolor=BLACK, linewidth=0.6)
-            hn, _ = np.histogram(np.concatenate(null[col]), bins=bins)
-            hn = hn * len(v) / hn.sum()
-            ax.step(bins, np.r_[hn, hn[-1]], where="post", color=BLACK, lw=0.8, ls="--", label="permutation null")
             ax.axvline(0, color=MID, lw=0.6)
             ax.set_xlim(-1, 1)
             ax.set_xlabel("Spearman correlation of thinking length\nwith the jump across the conclusion, per question")
             ax.set_title(lab, fontsize=7.5, loc="left")
             ax.text(0.03, 0.95, f"median {v.median():+.2f}\n{(v < 0).mean():.0%} of questions below 0", transform=ax.transAxes, fontsize=6.5, va="top")
         axes[0].set_ylabel("questions")
-        axes[1].legend(fontsize=6, loc="upper right")
         for ax, letter in zip(axes, "ab"):
             ax.text(-0.18, 1.06, letter, transform=ax.transAxes, fontsize=9, fontweight="bold", va="bottom")
         fig.tight_layout(w_pad=1.5)

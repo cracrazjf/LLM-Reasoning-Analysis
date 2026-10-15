@@ -41,12 +41,12 @@ Reasoning language models end their thinking with a conclusion sentence (``There
 \label{fig:jump}
 \end{figure}
 
-\item \textbf{The negative correlation holds in nearly every question.} Computed separately for each of the 24 prompts (100 traces each), the Spearman correlation between thinking length and the jump is below zero in 88\% of prompts for the model's own conclusion sentence (median $-0.26$) and in 83\% for the written sentence (median $-0.32$), far outside what shuffling the jumps within a prompt produces (Figure~\ref{fig:jumphist}).
+\item \textbf{The negative correlation holds in nearly every question.} Computed separately for each of the 24 prompts (100 traces each), the Spearman correlation between thinking length and the jump is below zero in 88\% of prompts for the model's own conclusion sentence (median $-0.26$) and in 83\% for the written sentence (median $-0.32$) (Figure~\ref{fig:jumphist}).
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.85\textwidth]{confidence_inflation_in_llms/fig_jump_length_hist.png}
-\caption{Per-question correlation between thinking length and the jump across the conclusion sentence (Spearman, one value per prompt, 24 prompts of 100 traces). (a) The model's own conclusion sentence. (b) The written sentence ``Therefore, the answer is L.'' Dashed: the distribution expected when the jumps are shuffled within each prompt (200 permutations, scaled to 24 questions).}
+\caption{Per-question correlation between thinking length and the jump across the conclusion sentence (Spearman, one value per prompt, 24 prompts of 100 traces). (a) The model's own conclusion sentence. (b) The written sentence ``Therefore, the answer is L.''}
 \label{fig:jumphist}
 \end{figure}
 
