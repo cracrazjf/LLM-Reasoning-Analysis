@@ -9,8 +9,7 @@
 \graphicspath{{../figures/}{figures/}}
 \setlength{\parskip}{4pt}
 
-\title{Confidence inflation in LLMs:\\
-a reasoning model's confidence is a read of its own written conclusion}
+\title{Confidence inflation in reasoning models\\}
 \author{Jingfeng Zhang}
 \date{Last updated: 2026-10-22}
 
@@ -18,7 +17,9 @@ a reasoning model's confidence is a read of its own written conclusion}
 \maketitle
 
 \begin{abstract}
-Reasoning language models end their thinking with a conclusion sentence (``Therefore, the answer is A.'') and then answer. In Qwen3-8B on 981 two-option diagnosis questions from MedXpertQA, the change in the log-probability difference between the two options across that sentence shrinks as the reasoning gets longer. To see how confidence builds over a whole reasoning trajectory, we cut the thinking at every sentence boundary, close the thinking block, and read the model's answer at each cut. The resulting curve stays flat through most of the trajectory, and most of its change occurs in the last few sentences, when the model writes its conclusion. This late, self-generated rise resembles confidence inflation in human judgment, where confidence rises as people keep deliberating even though no new evidence has arrived. Recomputing the attention of the answer-writing position in every layer and head shows that this position reads the conclusion sentence directly, and that the change is proportional to the attention share the sentence receives, which accounts for the length effect. Masked-attention ablations let us dissect the mechanism further. Hiding the conclusion sentence from the answer-writing position removes the change, and we replicate the known finding that such reads are carried by a small set of mid-to-late-layer heads. The attention of these heads is not simply diluted by the amount of context but by the amount of the model's own reasoning they attend to, which grows with its length. Together these results show that the answer is not read out from an internal belief, which truncation probes show is formed well before the conclusion, but retrieved from the model's own written conclusion. The reasoning trajectory serves as externalised working memory: the model writes its decision down and reads it back, and its confidence is the fidelity of that read.
+
+Confidence is a signal that organisms share with one another for a wide range of metacognitive purposes. Low confidence can indicate the need for help from a partner, or an unwillingness to move forward with an action without additional consideration or data. Human confidence is generally well calibrated, but it is also subject to certain illusions. \textit{Confidence inflation} is a prominent class of such illusions. Humans express increasing confidence in a decision with repeated opportunities to express their choice, even when no new information has been gathered across those opportunities. In this paper we explore an analogous effect in LLMs, in which the mere act of overtly providing an answer after a period of reasoning increases the subjective evidence in support of that answer. Inflation is higher when the reasoning period is shorter, a phenomenon that we localize to the relative weight of the answer itself in attention. LLMs that exhibit confidence inflation are at risk of amplifying confirmation bias in their own reasoning and in teamwork with human partners.
+
 \end{abstract}
 
 \section{Introduction}
@@ -44,6 +45,30 @@ Confidence is useful to a partner only while it is honest. Between people, shari
 \section*{Outline}
 
 \begin{enumerate}
+
+To be a good partner, a machine must make a variety of metacognitive decisions with respect to how it communicates.  In this paper, we investigate one important dimension of that behavior, examining how LLMs decide when to stop reasoning and offer an answer in response to a human query.
+
+% brief discussion of what humans do in regulating responses (grain-size control, don't know decisions, and response thresholds for humans under different conditions)
+
+i
+
+% hamilton siler benjamin show that grain size reghulation changes when the partner changes.
+
+how do we investigate this in LLMs?
+    there's a huge advantage here, because we can't see into humans but we can see into LLMs
+
+technique for mapping reasoning trajectories
+
+prior research on reasoning trajectories
+
+how to examine confidence before and after the LLM provides a response
+
+Methods much more clearly
+
+
+
+
+
 \item \textbf{The observation.} When the thinking of a trace is cut at successive sentence boundaries and the answer is read at each cut, the readout stays near indifference through most of the trajectory and rises in the last sentences, where the model writes its conclusion sentence. The rise across that sentence is large in short traces and small in long ones (Figure~\ref{fig:examples}). Over the 2,400 traces of the 12-question study the pattern is the rule, not the exception: two thirds of the readout's change falls in the last fifth of the trajectory, and the change across the conclusion sentence falls from 4.8 nats in the shortest tenth of the traces to 2.3 in the longest. Across the 1,962 prompts of the screening run, the answer's log-odds fall with reasoning length within a question in 94\% of prompts.
 
 \begin{figure}[h]
