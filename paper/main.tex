@@ -9,7 +9,7 @@
 \graphicspath{{../figures/}{figures/}}
 \setlength{\parskip}{4pt}
 
-\title{Confidence inflation in reasoning models\\}
+\title{Confidence inflation in reasoning models}
 \author{Jingfeng Zhang}
 \date{Last updated: 2026-10-22}
 
@@ -45,29 +45,24 @@ Confidence is useful to a partner only while it is honest. Between people, shari
 \section*{Outline}
 
 \begin{enumerate}
-
-To be a good partner, a machine must make a variety of metacognitive decisions with respect to how it communicates.  In this paper, we investigate one important dimension of that behavior, examining how LLMs decide when to stop reasoning and offer an answer in response to a human query.
+% To be a good partner, a machine must make a variety of metacognitive decisions with respect to how it communicates.  In this paper, we investigate one important dimension of that behavior, examining how LLMs decide when to stop reasoning and offer an answer in response to a human query.
 
 % brief discussion of what humans do in regulating responses (grain-size control, don't know decisions, and response thresholds for humans under different conditions)
 
-i
+% i
 
 % hamilton siler benjamin show that grain size reghulation changes when the partner changes.
 
-how do we investigate this in LLMs?
-    there's a huge advantage here, because we can't see into humans but we can see into LLMs
+% how do we investigate this in LLMs?
+%     there's a huge advantage here, because we can't see into humans but we can see into LLMs
 
-technique for mapping reasoning trajectories
+% technique for mapping reasoning trajectories
 
-prior research on reasoning trajectories
+% prior research on reasoning trajectories
 
-how to examine confidence before and after the LLM provides a response
+% how to examine confidence before and after the LLM provides a response
 
-Methods much more clearly
-
-
-
-
+% Methods much more clearly
 
 \item \textbf{The observation.} When the thinking of a trace is cut at successive sentence boundaries and the answer is read at each cut, the readout stays near indifference through most of the trajectory and rises in the last sentences, where the model writes its conclusion sentence. The rise across that sentence is large in short traces and small in long ones (Figure~\ref{fig:examples}). Over the 2,400 traces of the 12-question study the pattern is the rule, not the exception: two thirds of the readout's change falls in the last fifth of the trajectory, and the change across the conclusion sentence falls from 4.8 nats in the shortest tenth of the traces to 2.3 in the longest. Across the 1,962 prompts of the screening run, the answer's log-odds fall with reasoning length within a question in 94\% of prompts.
 
