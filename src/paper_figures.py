@@ -705,14 +705,15 @@ def examples(written: bool = False) -> None:
             x = [p - start for p in pos]
             onset_x = ls.loc[sid, "onset"] - start
             y_on = float(ls.loc[sid, "y_closed_onset"])
-            if written:                                   # cut the trace at the onset and end it with the written sentence instead
+            own = lt.loc[sid, "answer"]
+            same = ls.loc[sid, "last_sentence"].strip() == f"Therefore, the answer is {own}."
+            if written and not same:                      # cut the trace at the onset and end it with the written sentence instead
                 keep = [i for i, xx in enumerate(x) if xx <= onset_x]
                 x, y = [x[i] for i in keep], [y[i] for i in keep]
-                own = lt.loc[sid, "answer"]
                 x.append(onset_x + WRITTEN_TOKENS)
                 y.append(float(lt.loc[sid, "therefore_own"]) * (1.0 if own == label else -1.0))
                 last = f"Therefore, the answer is {own}."
-            else:
+            else:                                         # the model's own sentence (also when it already is the written sentence)
                 last = ls.loc[sid, "last_sentence"]
             ax.axhline(0, color=MID, lw=0.6, ls="--")
             ax.plot(x, y, color=BLACK, lw=0.9, marker="o", ms=2.2, markerfacecolor=BLACK)
