@@ -674,9 +674,14 @@ def fig9() -> None:
 EXAMPLES = ["medxpertqa:Text-699:I-B:ab#47", "medxpertqa:Text-699:I-B:ab#98", "medxpertqa:Text-699:I-B:ab#34"]   # short / medium / long (10th percentile, 941 tokens, 90th percentile)
 
 
-def examples() -> None:
-    """The closed readout along three traces of one question (short, medium, long), x = thinking tokens, with the conclusion sentence."""
+WRITTEN_TOKENS = 7   # " Therefore, the answer is A." is 7 Qwen3 tokens
+
+
+def examples(written: bool = False) -> None:
+    """The closed readout along three traces of one question (short, medium, long), x = thinking tokens, with the conclusion sentence.
+    written=True: the model's own conclusion sentence replaced by the written "Therefore, the answer is L." (letter_sentence.csv)."""
     ls = pd.read_csv(SCREEN / "medxpertqa_last_sentence_main.csv").set_index("sample_id")
+    lt = pd.read_csv(SCREEN / "medxpertqa_letter_sentence.csv").set_index("sample_id")
     order = EXAMPLES[0].rsplit("#", 1)[0].rsplit(":", 1)[1]
     run = RUNS[order]
     want = set(EXAMPLES)
@@ -699,16 +704,24 @@ def examples() -> None:
             y = [sgn * y0] + [sgn * (a - b) for (a, b), k in zip(zip(d["closed"]["logp_A"], d["closed"]["logp_B"]), d["kind"]) if k in ("s", "e")]
             x = [p - start for p in pos]
             onset_x = ls.loc[sid, "onset"] - start
+            y_on = float(ls.loc[sid, "y_closed_onset"])
+            if written:                                   # cut the trace at the onset and end it with the written sentence instead
+                keep = [i for i, xx in enumerate(x) if xx <= onset_x]
+                x, y = [x[i] for i in keep], [y[i] for i in keep]
+                own = lt.loc[sid, "answer"]
+                x.append(onset_x + WRITTEN_TOKENS)
+                y.append(float(lt.loc[sid, "therefore_own"]) * (1.0 if own == label else -1.0))
+                last = f"Therefore, the answer is {own}."
+            else:
+                last = ls.loc[sid, "last_sentence"]
             ax.axhline(0, color=MID, lw=0.6, ls="--")
             ax.plot(x, y, color=BLACK, lw=0.9, marker="o", ms=2.2, markerfacecolor=BLACK)
             ax.plot(x[-1], y[-1], marker="o", ms=5, color=BLACK)
-            ax.plot(onset_x, ls.loc[sid, "y_closed_onset"] * (1 if label == "A" else 1), marker="o", ms=5, markerfacecolor="white", markeredgecolor=BLACK, markeredgewidth=0.8)
-            last = ls.loc[sid, "last_sentence"]
-            y_on = float(ls.loc[sid, "y_closed_onset"])
+            ax.plot(onset_x, y_on, marker="o", ms=5, markerfacecolor="white", markeredgecolor=BLACK, markeredgewidth=0.8)
             mid = ((onset_x + x[-1]) / 2, (y_on + y[-1]) / 2)
             xmax = max(ls.loc[e, "think_tokens"] for e in EXAMPLES)
             ax.set_xlim(-0.03 * xmax, 1.16 * xmax)
-            # the jump across the conclusion sentence: a double arrow beside the last segment with its size
+            # the change across the conclusion sentence: a double arrow beside the last segment with its size
             xa = x[-1] + 0.02 * xmax
             ax.annotate("", xy=(xa, y[-1]), xytext=(xa, y_on), arrowprops={"arrowstyle": "<->", "lw": 0.8, "color": BLACK, "shrinkA": 0, "shrinkB": 0})
             ax.text(xa + 0.012 * xmax, (y_on + y[-1]) / 2, f"+{y[-1] - y_on:.1f} nats", fontsize=7, va="center", ha="left")
@@ -722,15 +735,16 @@ def examples() -> None:
             if name == "short":
                 from matplotlib.lines import Line2D
                 ax.legend(handles=[Line2D([], [], marker="o", ms=5, markerfacecolor="white", markeredgecolor=BLACK, color="none", label="before the conclusion sentence"),
-                                   Line2D([], [], marker="o", ms=5, color=BLACK, ls="none", label="after it (the stop)")], fontsize=6.5, loc="center right", handletextpad=0.4)
+                                   Line2D([], [], marker="o", ms=5, color=BLACK, ls="none", label="after the written sentence" if written else "after it (the stop)")], fontsize=6.5, loc="center right", handletextpad=0.4)
             for k, (xx, yy) in enumerate(zip(x, y)):
                 rows.append({"sample_id": sid, "trace": name, "k": k, "tokens_kept": xx, "readout": yy})
         axes[-1].set_xlabel("thinking tokens kept before the cut")
         fig.tight_layout(h_pad=0.6)
-        fig.savefig(OUT / "fig0_example_trajectories.png")
+        stem = "fig0_example_trajectories_written" if written else "fig0_example_trajectories"
+        fig.savefig(OUT / f"{stem}.png")
         plt.close(fig)
-    pd.DataFrame(rows).to_csv(OUT / "fig0_example_trajectories.csv", index=False)
-    print(f"-> {OUT / 'fig0_example_trajectories.png'}, .csv")
+    pd.DataFrame(rows).to_csv(OUT / f"{stem}.csv", index=False)
+    print(f"-> {OUT / stem}.png, .csv")
 
 
 # -------------------------------------------------------------------------------------------------------------- jump vs length
@@ -912,4 +926,4 @@ def ablation_bars() -> None:
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "fig1"
     OUT.mkdir(parents=True, exist_ok=True)
-    {"examples": examples, "jump": jump_vs_length, "jumphist": jump_length_hist, "attention": attention_shares, "ablation_bars": ablation_bars, "positions": positions_table, "fig1": fig1, "fig2": fig2, "fig3": fig3, "fig4": fig4, "ablation_table": ablation_table, "fig5": fig5, "fig6": fig6, "fig8": fig8, "fig9": fig9}[cmd]()
+    {"examples": examples, "examples_written": lambda: examples(written=True), "jump": jump_vs_length, "jumphist": jump_length_hist, "attention": attention_shares, "ablation_bars": ablation_bars, "positions": positions_table, "fig1": fig1, "fig2": fig2, "fig3": fig3, "fig4": fig4, "ablation_table": ablation_table, "fig5": fig5, "fig6": fig6, "fig8": fig8, "fig9": fig9}[cmd]()
