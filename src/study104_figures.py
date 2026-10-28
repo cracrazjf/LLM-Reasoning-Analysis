@@ -6,7 +6,7 @@ numbers next to each figure as CSV, captions in figures/study104/README.md.
     python src/study104_figures.py steps        # fig3_conclusion_step.png: the conclusion sentence's change against the changes of the sentences before it
     python src/study104_figures.py examples     # fig4_examples.png: three traces of one question per model, the conclusion sentence marked
     python src/study104_figures.py examples_written   # fig5_examples_written.png: the same traces ended by the two written sentences
-    python src/study104_figures.py perquestion  # fig6_per_question_correlation.png: the length-change correlation within every question
+    python src/study104_figures.py perquestion  # fig6_per_question_correlation.png: distribution of the length-change correlation over questions
     python src/study104_figures.py attention    # fig7_attention_answer.png: where the token that writes the answer attends: share of the tokens vs of its attention
     python src/study104_figures.py attention_value   # fig7_attention_answer_value.png: the same with every weight multiplied by |W_O v| of its token
     python src/study104_figures.py mechanism    # fig8_length_attention_jump.png: length -> the conclusion's attention share -> the change across it
@@ -293,43 +293,18 @@ def perquestion() -> None:
     summ.to_csv(OUT / "fig6_per_question_correlation_summary.csv", index=False)
 
     plt.rcParams.update(STYLE)
-    fig, axes = plt.subplots(2, 2, figsize=(7.2, 4.9), gridspec_kw={"width_ratios": [2.3, 1], "wspace": 0.28, "hspace": 0.45})
+    fig, axes = plt.subplots(1, 2, figsize=(6.4, 2.7), sharey=True, gridspec_kw={"wspace": 0.12})
     bins = np.linspace(-1, 1, 41)
-    for i, (model, label) in enumerate(MODELS):
-        d = q[q.model == label].sort_values("rho").reset_index(drop=True)
+    for ax, (model, label), letter in zip(axes, MODELS, "ab"):
+        d = q[q.model == label]
         sm = summ[summ.model == label].iloc[0]
-        ax, bx = axes[i]
-        x = np.arange(1, len(d) + 1)
-        ax.fill_between(x, d.null_low.median(), d.null_high.median(), color=LIGHT, alpha=0.5, linewidth=0, zorder=0)
-        ax.axhline(0, color=BLACK, linewidth=0.6, zorder=1)
-        ax.vlines(x, d.ci_low, d.ci_high, color=MID, linewidth=0.6, zorder=2)
-        sig = d.ci_high < 0
-        ax.scatter(x[sig], d.rho[sig], s=9, color=BLACK, zorder=3, label="95% interval below 0")
-        ax.scatter(x[~sig], d.rho[~sig], s=9, facecolor=WHITE, edgecolor=BLACK, linewidth=0.6, zorder=3, label="95% interval includes 0 or lies above it")
-        ax.axhline(sm.rho_median, color=BLACK, linewidth=0.7, linestyle=(0, (3, 2)), zorder=1)
-        ax.set_xlim(0, len(d) + 1)
-        ax.set_ylim(-1, 1)
-        ax.set_ylabel("within-question Spearman\n(length vs conclusion's change)")
-        ax.set_title(f"{label}: negative in {sm.negative} of {sm.questions} questions; interval below 0 in {sm.ci_below_0}, above 0 in {sm.ci_above_0}",
-                     fontsize=7.5, loc="left")
-        if i == 1:
-            ax.set_xlabel("question (sorted by its correlation)")
-        if i == 0:
-            ax.legend(loc="upper left", handletextpad=0.3, borderaxespad=0.2, fontsize=6.5)
-        w = np.full(len(d), 1 / len(d))
-        bx.hist(d.rho, bins=bins, weights=w, color=MID, edgecolor=WHITE, linewidth=0.3, label="observed")
-        nl = nulls[label]
-        bx.hist(nl, bins=bins, weights=np.full(len(nl), 1 / len(nl)), histtype="step", color=BLACK, linewidth=0.8, label="length shuffled")
-        bx.axvline(0, color=BLACK, linewidth=0.6)
-        bx.axvline(sm.rho_median, color=BLACK, linewidth=0.7, linestyle=(0, (3, 2)))
-        bx.set_xlim(-1, 1)
-        bx.set_ylabel("share of questions")
-        if i == 1:
-            bx.set_xlabel("within-question Spearman")
-        if i == 0:
-            bx.legend(loc="lower center", bbox_to_anchor=(0.5, 1.0), ncol=2, handlelength=1.0, handletextpad=0.3, columnspacing=0.8, borderaxespad=0.1, fontsize=6.5)
-        for a_, letter, xo in ((ax, "ac"[i], -0.1), (bx, "bd"[i], -0.3)):
-            a_.text(xo, 1.12, letter, transform=a_.transAxes, fontsize=9, fontweight="bold", va="bottom")
+        ax.hist(d.rho, bins=bins, weights=np.full(len(d), 100 / len(d)), color=MID, edgecolor=WHITE, linewidth=0.3)
+        ax.axvline(0, color=BLACK, linewidth=0.6)
+        ax.set_xlim(-0.8, 0.8)
+        ax.set_title(f"{label}: negative in {sm.negative} of {sm.questions} questions", fontsize=7.5)
+        ax.set_xlabel("within-question Spearman correlation between\nthinking length and the conclusion's change")
+        ax.text(-0.13 if letter == "a" else -0.04, 1.08, letter, transform=ax.transAxes, fontsize=9, fontweight="bold", va="bottom")
+    axes[0].set_ylabel("percentage of questions")
     fig.savefig(OUT / "fig6_per_question_correlation.png", bbox_inches="tight")
     pd.set_option("display.width", 220)
     print(summ.round(3).to_string(index=False))

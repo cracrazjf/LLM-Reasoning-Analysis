@@ -70,17 +70,14 @@ coincide. Numbers: fig5_examples_written.csv.
 
 ## fig6_per_question_correlation.png (`perquestion`)
 
-Within every question, the Spearman correlation between a trace's thinking length and the change across its conclusion sentence
-(own conclusion; all answered traces of the question, 59 or 60), (a, b) Qwen3-8B and (c, d) Qwen3-32B. (a, c) One point per
-question, questions sorted by their correlation; whiskers = 95% intervals from resampling the question's traces (1,000 draws);
-filled = interval below 0; grey band = the range (2.5th to 97.5th percentile, median over questions, about -0.25 to +0.25) of the
-correlation when the lengths are shuffled within the question, i.e. what a question shows by chance; dashed line = median over
-questions. (b, d) The 104 correlations (grey bars) against the correlations of the shuffled questions (outline). Qwen3-8B: median
--0.16, negative in 75 of 104 questions, interval below 0 in 31 and above 0 in 2 (about 2.6 each would be expected by chance).
-Qwen3-32B: median -0.17, negative in 85, interval below 0 in 33 and above 0 in 1. The correlations vary across questions more
-than sampling alone makes them vary (SD across questions 0.22 against a within-question sampling SD of 0.13 in the 8B, 0.17
-against 0.13 in the 32B), so the questions differ in the size of the effect, more in the 8B than in the 32B. Numbers:
-fig6_per_question_correlation.csv (per question), fig6_per_question_correlation_summary.csv.
+Distribution over the 104 questions of the within-question Spearman correlation between a trace's thinking length and the change
+across its conclusion sentence (own conclusion; all answered traces of the question, 59 or 60), (a) Qwen3-8B and (b) Qwen3-32B.
+Bars: the percentage of the questions whose correlation falls in each bin; vertical line: zero. Qwen3-8B: median -0.16, negative in 75 of 104 questions; Qwen3-32B: median
+-0.17, negative in 85. Per question (from resampling its traces, 1,000 draws), the 95% interval lies below 0 in 31 (8B) and 33
+(32B) questions and above 0 in 2 and 1, against about 2.6 each by chance (from shuffling the lengths among a question's traces, 1,000 shuffles per question). The correlations vary across questions more than
+sampling alone makes them vary (SD across questions 0.22 against a within-question sampling SD of 0.13 in the 8B, 0.17 against
+0.13 in the 32B), so the questions differ in the size of the effect, more in the 8B than in the 32B. Numbers:
+fig6_per_question_correlation.csv (per question: correlation, interval, shuffled range), fig6_per_question_correlation_summary.csv.
 
 ## fig7_attention_answer.png (`attention`)
 
