@@ -1,0 +1,105 @@
+item_id,pair_id,order,set,correct_text,distractor_text,acc_qwen3-8b,n_qwen3-8b,nothink_qwen3-8b,acc_qwen3-32b,n_qwen3-32b,nothink_qwen3-32b
+medxpertqa:Text-959:E-D:ab,Text-959:E-D,ab,new,Cyclothymic disorder,Bipolar II disorder,0.0,60,False,0.0,60,False
+medxpertqa:Text-1037:D-G:ab,Text-1037:D-G,ab,new,Malingering,Psychogenic paresis,0.0,60,False,0.0,60,False
+medxpertqa:Text-1548:G-E:ab,Text-1548:G-E,ab,new,Cervical radiculopathy,Guyon’s canal syndrome,0.0,60,False,0.0,60,False
+medxpertqa:Text-1615:C-D:ba,Text-1615:C-D,ba,new,left innominate inflare,left posterior innominate rotation,0.0,60,False,0.0,60,False
+medxpertqa:Text-1783:F-E:ba,Text-1783:F-E,ba,new,Hepatitis D virus infection,Hepatitis B virus reactivation,0.0,60,False,0.13333333333333333,60,False
+medxpertqa:Text-2410:D-F:ab,Text-2410:D-F,ab,new,Left on left sacral torsion,Right on right sacral torsion,0.0,60,False,0.21666666666666667,60,True
+medxpertqa:Text-1495:J-F:ab,Text-1495:J-F,ab,new,CHARGE association,Velocardiofacial syndrome,0.0,60,False,0.3,60,True
+medxpertqa:Text-2176:H-D:ba,Text-2176:H-D,ba,new,Midcycle pain,Ovarian cyst rupture,0.0,60,False,0.4,60,False
+medxpertqa:Text-1928:A-E:ab,Text-1928:A-E,ab,new,Anterior thoracic 11 tender point,Iliacus tender point,0.016666666666666666,60,False,0.0,60,False
+medxpertqa:Text-540:A-I:ab,Text-540:A-I,ab,new,Abduction of the ulna,Distal radioulnar joint dysfunction,0.016666666666666666,60,False,0.21666666666666667,60,False
+medxpertqa:Text-1963:F-I:ab,Text-1963:F-I,ab,new,Schizoaffective disorder,Mood disorder with psychotic features,0.016666666666666666,60,False,0.8666666666666667,60,True
+medxpertqa:Text-2053:A-H:ab,Text-2053:A-H,ab,new,Coxa valga,Femoral anteversion,0.05,60,False,0.25,60,False
+medxpertqa:Text-2110:J-H:ab,Text-2110:J-H,ab,new,Ischemic colitis,Celiac disease,0.06666666666666667,60,False,0.7,60,True
+medxpertqa:Text-330:G-A:ba,Text-330:G-A,ba,new,Anorexia nervosa,Atypical anorexia nervosa,0.1,60,False,0.3333333333333333,60,True
+medxpertqa:Text-779:D-G:ab,Text-779:D-G,ab,new,Right unilateral sacral extension,Left on left sacral torsion,0.1,60,True,0.5666666666666667,60,True
+medxpertqa:Text-31:D-B:ab,Text-31:D-B,ab,new,Superior vertical strain,Cranial base dysfunction,0.11666666666666667,60,False,0.0,60,False
+medxpertqa:Text-222:C-H:ab,Text-222:C-H,ab,new,Cyclothymic disorder,Bipolar I disorder,0.11666666666666667,60,False,0.18333333333333332,60,False
+medxpertqa:Text-1367:J-I:ab,Text-1367:J-I,ab,new,Left unilateral extension about the middle transverse axis,Right unilateral extension about the superior transverse axis,0.11666666666666667,60,False,0.2,60,False
+medxpertqa:Text-1489:I-B:ab,Text-1489:I-B,ab,new,Moderate opiate use disorder,Severe opiate use disorder,0.13333333333333333,60,False,0.06666666666666667,60,False
+medxpertqa:Text-1914:E-B:ba,Text-1914:E-B,ba,new,Left superior pubic shear,Left posterior innominate rotation,0.13333333333333333,60,False,0.85,60,False
+medxpertqa:Text-2445:C-H:ba,Text-2445:C-H,ba,new,Gastric ulcer,Duodenal ulcer,0.13333333333333333,60,False,0.95,60,False
+medxpertqa:Text-1921:H-F:ab,Text-1921:H-F,ab,new,"T6 extended, rotated left, sidebent left","T7 flexed, rotated left, sidebent left",0.18333333333333332,60,False,0.3333333333333333,60,True
+medxpertqa:Text-1031:E-J:ba,Text-1031:E-J,ba,new,Brain abscess,Viral encephalitis,0.1864406779661017,59,False,0.9666666666666667,60,False
+medxpertqa:Text-1441:D-F:ba,Text-1441:D-F,ba,new,C7 FRLSL,C7 ERLSL,0.2,60,False,0.06666666666666667,60,False
+medxpertqa:Text-282:J-C:ab,Text-282:J-C,ab,new,Left unilateral sacral flexion about the middle transverse axis,Right unilateral sacral flexion about the middle transverse axis,0.23333333333333334,60,False,0.26666666666666666,60,False
+medxpertqa:Text-484:A-F:ab,Text-484:A-F,ab,new,Medial meniscal tear,Patellar subluxation,0.23333333333333334,60,False,1.0,60,True
+medxpertqa:Text-928:G-B:ba,Text-928:G-B,ba,new,C4–C6 ERRSR,C4–C6 FRRSR,0.2833333333333333,60,False,0.3,60,False
+medxpertqa:Text-1999:G-A:ab,Text-1999:G-A,ab,new,left-on-left sacral torsion,right-on-right sacral torsion,0.31666666666666665,60,True,0.6333333333333333,60,True
+medxpertqa:Text-1239:F-I:ba,Text-1239:F-I,ba,new,NSRRL,NSRLR,0.36666666666666664,60,False,0.36666666666666664,60,False
+medxpertqa:Text-2220:D-B:ab,Text-2220:D-B,ab,new,anterior fibular head dysfunction,posterior fibular head dysfunction,0.43333333333333335,60,True,0.75,60,True
+medxpertqa:Text-1865:F-C:ab,Text-1865:F-C,ab,new,Rectovaginal fistula,Vaginal neoplasm,0.48333333333333334,60,True,0.9166666666666666,60,True
+medxpertqa:Text-1522:B-A:ba,Text-1522:B-A,ba,new,Left superior pubic shear,Left posterior innominate rotation,0.5333333333333333,60,False,0.8,60,True
+medxpertqa:Text-697:D-A:ba,Text-697:D-A,ba,new,Dysbetalipoproteinemia,Type III hyperlipoproteinemia,0.55,60,False,0.9666666666666667,60,True
+medxpertqa:Text-699:I-B:ab,Text-699:I-B,ab,study12,left unilateral sacral extension,left unilateral sacral flexion,0.65,60,False,0.6833333333333333,60,True
+medxpertqa:Text-1582:F-E:ba,Text-1582:F-E,ba,study12,Bilateral sacral extension along the middle transverse axis,Bilateral sacral rotation along the middle transverse axis,0.65,60,False,0.85,60,False
+medxpertqa:Text-317:C-F:ab,Text-317:C-F,ab,new,Granulomatous mastitis,Plasma cell mastitis,0.7166666666666667,60,False,0.0,60,False
+medxpertqa:Text-303:E-J:ab,Text-303:E-J,ab,new,Hypertensive emergency,Hypertension,0.7166666666666667,60,True,0.9333333333333333,60,True
+medxpertqa:Text-1913:G-C:ba,Text-1913:G-C,ba,new,Jejunal atresia,Ileal atresia,0.7166666666666667,60,False,1.0,60,True
+medxpertqa:Text-200:J-F:ba,Text-200:J-F,ba,new,"T9 flexed, rotated right, sidebent right","T11 flexed, rotated left, sidebent left",0.7333333333333333,60,False,0.85,60,False
+medxpertqa:Text-714:J-A:ab,Text-714:J-A,ab,new,C8 radiculopathy,Cubital tunnel syndrome,0.7833333333333333,60,False,0.9333333333333333,60,True
+medxpertqa:Text-2108:H-J:ba,Text-2108:H-J,ba,new,Lateral strain,Superior vertical strain,0.8,60,False,1.0,60,True
+medxpertqa:Text-83:I-B:ab,Text-83:I-B,ab,new,T5 FRRSR,T5 NSLSL,0.8666666666666667,60,True,1.0,60,True
+medxpertqa:Text-460:A-J:ba,Text-460:A-J,ba,study12,Parvovirus B19,Viral arthritis due to EBV,0.8666666666666667,60,False,1.0,60,True
+medxpertqa:Text-1481:I-G:ab,Text-1481:I-G,ab,study12,Giant-cell arteritis,Thoracic-outlet obstruction,0.8666666666666667,60,False,1.0,60,True
+medxpertqa:Text-2082:F-G:ba,Text-2082:F-G,ba,new,Vaginal septum,Androgen insensitivity syndrome,0.8833333333333333,60,False,1.0,60,True
+medxpertqa:Text-1173:H-G:ab,Text-1173:H-G,ab,new,Liddle syndrome,Gordon syndrome,0.9166666666666666,60,True,1.0,60,True
+medxpertqa:Text-696:B-I:ba,Text-696:B-I,ba,new,Dependent,Avoidant,0.9333333333333333,60,False,1.0,60,True
+medxpertqa:Text-1259:J-F:ba,Text-1259:J-F,ba,new,Blood vessel narrowing,Vasovagal syncope,0.95,60,True,0.9333333333333333,60,False
+medxpertqa:Text-416:D-C:ba,Text-416:D-C,ba,new,right-on-right sacral torsion,sacral base posterior,0.9666666666666667,60,True,0.9666666666666667,60,True
+medxpertqa:Text-911:E-J:ab,Text-911:E-J,ab,new,Aromatase deficiency,5α-reductase deficiency,0.9666666666666667,60,True,1.0,60,True
+medxpertqa:Text-1920:I-B:ba,Text-1920:I-B,ba,new,Linear IgA disease,Dermatitis herpetiformis,0.9666666666666667,60,True,1.0,60,True
+medxpertqa:Text-2449:C-D:ab,Text-2449:C-D,ab,study12,Parvovirus,Lyme disease,0.9666666666666667,60,False,1.0,60,True
+medxpertqa:Text-1363:E-D:ba,Text-1363:E-D,ba,new,Aortic valve regurgitation,Atrial septal defect,0.9833333333333333,60,True,0.7833333333333333,60,True
+medxpertqa:Text-1881:D-B:ba,Text-1881:D-B,ba,new,Right superior shear,Left inferior shear,0.9833333333333333,60,True,0.9,60,True
+medxpertqa:Text-2179:B-I:ab,Text-2179:B-I,ab,new,Secondary pure red cell aplasia,Myelophthisic anemia,0.9833333333333333,60,True,0.9,60,True
+medxpertqa:Text-1593:C-G:ba,Text-1593:C-G,ba,new,Left rotation on a right oblique axis,Left unilateral sacral extension,0.9833333333333333,60,True,0.9333333333333333,60,False
+medxpertqa:Text-1934:E-I:ba,Text-1934:E-I,ba,new,The sacrum is a forward torsion,The iliolumbar ligament is the primary source of pain,0.9833333333333333,60,True,0.9833333333333333,60,False
+medxpertqa:Text-2275:B-J:ba,Text-2275:B-J,ba,new,Drug-induced lupus,Rheumatoid arthritis flare with systemic symptoms,0.9833333333333333,60,True,1.0,60,True
+medxpertqa:Text-2328:A-G:ba,Text-2328:A-G,ba,new,Lumbosacral strain,Osteoporotic fracture,1.0,60,True,0.016666666666666666,60,False
+medxpertqa:Text-2035:I-C:ba,Text-2035:I-C,ba,new,C2 ERLSL,C3 FRLSL,1.0,60,False,0.7666666666666667,60,True
+medxpertqa:Text-1467:H-B:ba,Text-1467:H-B,ba,study12,Left inferior pubic shear,Left hip labral tear,1.0,60,True,0.7833333333333333,60,False
+medxpertqa:Text-1426:A-C:ba,Text-1426:A-C,ba,new,quadrigia syndrome,trigger finger,1.0,60,True,0.8,60,False
+medxpertqa:Text-915:J-B:ba,Text-915:J-B,ba,new,Chronic hepatitis B infection,Hepatitis B immune tolerance phase,1.0,60,True,0.8833333333333333,60,False
+medxpertqa:Text-1427:J-F:ba,Text-1427:J-F,ba,new,Situational syncope,Carotid sinus hypersensitivity,1.0,60,True,0.9,60,False
+medxpertqa:Text-179:J-C:ab,Text-179:J-C,ab,new,Primary hyperfibrinolysis,Liver disease coagulopathy,1.0,60,True,0.9333333333333333,60,False
+medxpertqa:Text-2019:H-J:ab,Text-2019:H-J,ab,new,Bilaterally flexed sacrum about the middle transverse axis,Unilaterally extended sacrum about the left oblique axis,1.0,60,True,0.9333333333333333,60,True
+medxpertqa:Text-326:E-I:ab,Text-326:E-I,ab,study12,Posterior radial head,Anterior radial head,1.0,60,False,0.95,60,False
+medxpertqa:Text-1218:C-J:ba,Text-1218:C-J,ba,new,Left inferior innominate shear,Bilateral sacral flexion,1.0,60,True,0.9666666666666667,60,True
+medxpertqa:Text-1687:F-G:ab,Text-1687:F-G,ab,new,left-on-right sacral torsion,bilateral sacral extension,1.0,60,True,0.9833333333333333,60,True
+medxpertqa:Text-1897:C-E:ab,Text-1897:C-E,ab,new,Protein-secreting CNS mass,Normal pregnancy,1.0,60,True,0.9833333333333333,60,True
+medxpertqa:Text-21:E-B:ab,Text-21:E-B,ab,new,Leukemoid reaction,Polycythemia vera,1.0,60,True,1.0,60,True
+medxpertqa:Text-73:B-G:ba,Text-73:B-G,ba,new,Exertional heat stroke,Septic shock,1.0,60,True,1.0,60,True
+medxpertqa:Text-147:D-I:ab,Text-147:D-I,ab,study12,Central precocious puberty related to a central nervous system lesion,Precocious puberty related to a peripheral androgen-secreting tumor,1.0,60,False,1.0,60,True
+medxpertqa:Text-156:I-F:ab,Text-156:I-F,ab,new,Schizoaffective disorder,Borderline personality disorder,1.0,60,True,1.0,60,True
+medxpertqa:Text-286:A-B:ba,Text-286:A-B,ba,new,Oligoarticular juvenile idiopathic arthritis,Reactive arthritis,1.0,60,True,1.0,60,True
+medxpertqa:Text-471:I-C:ba,Text-471:I-C,ba,new,Dementia,Vascular cognitive impairment,1.0,60,True,1.0,60,True
+medxpertqa:Text-510:I-F:ab,Text-510:I-F,ab,new,Enterovirus meningitis,Tuberculous meningitis,1.0,60,True,1.0,60,True
+medxpertqa:Text-555:I-J:ba,Text-555:I-J,ba,new,Anterior fibular head dysfunction,Plantar fascia strain,1.0,60,True,1.0,60,True
+medxpertqa:Text-572:D-G:ab,Text-572:D-G,ab,new,Renal-cell carcinoma,Immunoglobulin A nephropathy,1.0,60,True,1.0,60,True
+medxpertqa:Text-602:I-G:ab,Text-602:I-G,ab,new,Intellectual disability,Rett syndrome,1.0,60,True,1.0,60,True
+medxpertqa:Text-799:A-J:ab,Text-799:A-J,ab,new,Normal stress reaction,Dysthymic disorder,1.0,60,False,1.0,60,True
+medxpertqa:Text-968:G-C:ba,Text-968:G-C,ba,new,Lisdexamfetamine intoxication,Alcohol withdrawal delirium,1.0,60,True,1.0,60,True
+medxpertqa:Text-982:B-A:ba,Text-982:B-A,ba,study12,Pseudothrombocytopenia,Immune thrombocytopenic purpura,1.0,60,True,1.0,60,True
+medxpertqa:Text-1074:A-D:ba,Text-1074:A-D,ba,new,Normal anion gap metabolic acidosis and respiratory acidosis,Metabolic alkalosis,1.0,60,True,1.0,60,True
+medxpertqa:Text-1241:I-H:ab,Text-1241:I-H,ab,new,Chronic myelogenous leukemia,Hairy cell leukemia,1.0,60,True,1.0,60,True
+medxpertqa:Text-1253:J-E:ab,Text-1253:J-E,ab,new,Bedbug bite,Flea bites,1.0,60,True,1.0,60,True
+medxpertqa:Text-1338:A-H:ab,Text-1338:A-H,ab,new,Small cell lung cancer,Bronchial adenoma,1.0,60,True,1.0,60,True
+medxpertqa:Text-1361:H-B:ab,Text-1361:H-B,ab,new,Becker muscular dystrophy,Charcot-Marie-Tooth disease,1.0,60,True,1.0,60,True
+medxpertqa:Text-1385:A-G:ba,Text-1385:A-G,ba,new,Benign hereditary chorea,Drug-induced chorea,1.0,60,True,1.0,60,True
+medxpertqa:Text-1553:J-E:ba,Text-1553:J-E,ba,study12,left sacral rotation around a right oblique axis,unilateral sacral flexion on the left,1.0,60,True,1.0,60,True
+medxpertqa:Text-1565:G-A:ba,Text-1565:G-A,ba,new,Appendicitis,Pancreatitis,1.0,60,False,1.0,60,True
+medxpertqa:Text-1603:B-H:ab,Text-1603:B-H,ab,new,Rupture of an emphysematous bleb,Bronchial obstruction from mucus plugging,1.0,60,True,1.0,60,True
+medxpertqa:Text-1739:E-G:ba,Text-1739:E-G,ba,new,Spinal epidural abscess,Drug-seeking behavior,1.0,60,True,1.0,60,True
+medxpertqa:Text-1788:C-J:ba,Text-1788:C-J,ba,new,Microscopic polyangiitis,Eosinophilic granulomatosis with polyangiitis,1.0,60,True,1.0,60,True
+medxpertqa:Text-1863:B-D:ba,Text-1863:B-D,ba,new,Wilms tumor,Mesenteric cyst,1.0,60,True,1.0,60,True
+medxpertqa:Text-1976:A-G:ba,Text-1976:A-G,ba,new,Von Willebrand disease,Immune thrombocytopenic purpura,1.0,60,True,1.0,60,False
+medxpertqa:Text-1991:I-E:ab,Text-1991:I-E,ab,new,Cavernous hemangioma,Cholangiocarcinoma,1.0,60,True,1.0,60,True
+medxpertqa:Text-2009:C-A:ba,Text-2009:C-A,ba,study12,Colon cancer,Ischemic colitis,1.0,60,True,1.0,60,True
+medxpertqa:Text-2010:G-A:ba,Text-2010:G-A,ba,new,Anteriorly rotated clavicle,Rotator cuff impingement syndrome,1.0,60,True,1.0,60,True
+medxpertqa:Text-2072:D-G:ab,Text-2072:D-G,ab,new,Irritable bowel syndrome,Inflammatory bowel disease,1.0,60,True,1.0,60,True
+medxpertqa:Text-2133:E-I:ba,Text-2133:E-I,ba,new,Cutaneous anthrax,Pyoderma gangrenosum,1.0,60,True,1.0,60,True
+medxpertqa:Text-2290:J-E:ab,Text-2290:J-E,ab,new,Normal infant crying,Feeding intolerance,1.0,60,True,1.0,60,True
+medxpertqa:Text-2291:E-G:ba,Text-2291:E-G,ba,new,Precordial catch syndrome,Pleurodynia,1.0,60,True,1.0,60,True
+medxpertqa:Text-2367:I-G:ab,Text-2367:I-G,ab,new,5α-reductase deficiency,True hermaphroditism,1.0,60,False,1.0,60,True

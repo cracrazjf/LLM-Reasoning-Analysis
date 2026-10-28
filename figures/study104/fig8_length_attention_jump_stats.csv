@@ -1,0 +1,3 @@
+model,traces,rho_length_share_median,length_share_negative,rho_share_jump_median,share_jump_positive,questions,length_alone_nats_per_doubling,length_alone_ci,length_with_share_nats_per_doubling,length_with_share_ci,share_nats_per_point,share_ci
+Qwen3-8B,6239,-0.38225039378549086,101,0.595483619993367,103,104,-0.6907561557531718,"[-0.91, -0.49]",0.08270127101832392,"[-0.08, 0.24]",0.7196992469824396,"[0.61, 0.85]"
+Qwen3-32B,6240,-0.4022590273167084,101,0.6012167213384596,104,104,-0.6292101260547392,"[-0.79, -0.48]",0.5796060315896507,"[0.44, 0.71]",0.8926945756672185,"[0.82, 0.97]"

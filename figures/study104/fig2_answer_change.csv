@@ -1,0 +1,9 @@
+model,category,transition,right_after,questions,share
+Qwen3-8B,changed,wrong → right,True,20,0.19230769230769232
+Qwen3-8B,changed,right → wrong,False,4,0.038461538461538464
+Qwen3-8B,unchanged,right → right,True,53,0.5096153846153846
+Qwen3-8B,unchanged,wrong → wrong,False,27,0.25961538461538464
+Qwen3-32B,changed,wrong → right,True,15,0.14423076923076922
+Qwen3-32B,changed,right → wrong,False,4,0.038461538461538464
+Qwen3-32B,unchanged,right → right,True,66,0.6346153846153846
+Qwen3-32B,unchanged,wrong → wrong,False,19,0.18269230769230768
